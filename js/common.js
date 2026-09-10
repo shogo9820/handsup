@@ -538,3 +538,79 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 });
 
+// ===================================================
+// 【追加】タッチ操作制御（ダブルタップで正解 / 上フリックでパス）
+// ===================================================
+/**
+ * 画面へのタッチ操作（ダブルタップ・上フリック）を監視・制御する関数
+ * @param {HTMLElement} screenElement - 監視対象の画面要素 (gestureScreen や tabooScreen)
+ * @param {function} onAction - アクション実行時のコールバック関数
+ */
+function startTouchGame(screenElement, onAction) {
+  if (!screenElement || typeof onAction !== 'function') return;
+
+  // 既存のリスナーと重複しないよう、一度クリアするための参照保持
+  stopTouchGame(screenElement);
+
+  let lastTapTime = 0;
+  let touchStartY = 0;
+
+  // タッチ開始時の座標を記録
+  screenElement._touchStartHandler = (e) => {
+    if (appState.isPaused || appState.timeLeftSec <= 0) return;
+    touchStartY = e.touches[0].clientY;
+  };
+
+  // タッチ終了時にダブルタップとフリックを判定
+  screenElement._touchEndHandler = (e) => {
+    if (appState.isPaused || appState.timeLeftSec <= 0) return;
+
+    const currentTime = new Date().getTime();
+    const touchEndY = e.changedTouches[0].clientY;
+    const diffY = touchStartY - touchEndY; // 上方向への移動量
+
+    // 1. 【上フリック判定】
+    // 上方向に50px以上素早く動かされたら「パス」とみなす
+    if (diffY > 50) {
+      if (navigator.vibrate) navigator.vibrate(100);
+      onAction('pass');
+      return; // フリックが成立したらダブルタップ判定はスキップ
+    }
+
+    // 2. 【ダブルタップ判定】
+    // 300ミリ秒以内に再度タップされたら「正解」とみなす
+    if ((currentTime - lastTapTime) < 300) {
+      if (navigator.vibrate) navigator.vibrate(200);
+      onAction('correct');
+      lastTapTime = 0; // 連続発火防止のためにリセット
+    } else {
+      lastTapTime = currentTime;
+    }
+  };
+
+  screenElement.addEventListener('touchstart', screenElement._touchStartHandler, { passive: true });
+  screenElement.addEventListener('touchend', screenElement._touchEndHandler, { passive: true });
+}
+
+/**
+ * タッチ操作の監視を解除する関数
+ */
+function stopTouchGame(screenElement) {
+  if (!screenElement) return;
+  if (screenElement._touchStartHandler) {
+    screenElement.removeEventListener('touchstart', screenElement._touchStartHandler);
+    screenElement._touchStartHandler = null;
+  }
+  if (screenElement._touchEndHandler) {
+    screenElement.removeEventListener('touchend', screenElement._touchEndHandler);
+    screenElement._touchEndHandler = null;
+  }
+}
+
+// 既存の stopCommonGame にタッチ停止処理を組み込む
+const originalStopCommonGame = stopCommonGame;
+stopCommonGame = function() {
+  originalStopCommonGame();
+  stopTouchGame(gestureScreen);
+  stopTouchGame(tabooScreen);
+};

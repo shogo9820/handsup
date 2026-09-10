@@ -7,19 +7,19 @@ let currentTabooWordText = '';
 
 document.getElementById('btn-taboo-start').addEventListener('click', async () => {
   // 1. タップされた瞬間に最優先でジャイロの許可・起動を行う
-  // 💡 【修正】ジェスチャー用（handleGestureAction）になっていた部分を、カタカナーシ用（handleTabooAction）に変更
   const gyroStarted = await startGyroGame((action) => {
+    handleTabooAction(action);
+  });
+  
+  // 💡【追加】タッチ判定（ダブルタップ・上フリック）も同時に起動
+  startTouchGame(tabooScreen, (action) => {
     handleTabooAction(action);
   });
   
   prepareWords();
 
-  // 1. ゲーム開始時に履歴をリセット（common.jsの関数）
+  // ゲーム開始時に履歴をリセット
   resetGameHistory();
-
-  await startGyroGame((action) => {
-    handleTabooAction(action);
-  });
 
   showScreen(tabooScreen);
   renderNextTabooWord();
@@ -27,7 +27,7 @@ document.getElementById('btn-taboo-start').addEventListener('click', async () =>
   startTimerBar(document.getElementById('taboo-timer-bar'), () => {
     // タイムアップ時の処理
     stopCommonGame();
-    // 3. タイムアップ時にリザルトモーダルを表示（common.jsの関数）
+    // タイムアップ時にリザルトモーダルを表示
     showResultModal();
   });
 });
