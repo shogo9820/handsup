@@ -447,12 +447,12 @@ body.theme-taboo .timer-bar {
 }
 
 /* ==================================================
-   モーダル（タップ位置ズレの完全修正）
+   モーダル（iPhone横持ち時のズレを完全修正）
    ================================================== */
 .modal-overlay {
   display: none;
   position: fixed;
-  /* 💡 画面全体を完全に覆い、PWAの謎の余白・タップのズレを許さない */
+  /* 💡 画面の上下キワまで隙間なく完全に覆う */
   top: 0;
   left: 0;
   right: 0;
@@ -471,12 +471,12 @@ body.theme-taboo .timer-bar {
 
 .modal-content {
   background: #34495e;
-  padding: 20px 16px;
+  padding: 16px; /* 💡 横持ちでの可読性を上げるため余白を少しだけ最適化 */
   border-radius: 18px;
   width: 90%;
   max-width: 460px;
-  /* 💡 横持ち画面で閉じるボタンがはみ出さないよう、最大高さを制限し自動スクロール可能に */
-  max-height: 85dvh;
+  /* 💡 iPhone 13 Pro Maxの横持ち画面の高さ（約428px）に合わせ、閉じるボタンが絶対にはみ出さない高さに制限 */
+  max-height: 82dvh;
   overflow-y: auto;
   text-align: center;
   box-sizing: border-box;
@@ -613,16 +613,16 @@ body.theme-taboo .timer-bar {
 #result-modal .modal-content {
   width: 95%;
   max-width: 600px;
-  max-height: 90dvh; /* 💡 100dvh基準に変更 */
+  max-height: 88dvh; /* 💡 横長のPro Maxでスクロールできるように調整 */
   display: flex;
   flex-direction: column;
 }
 
 .result-list {
-  max-height: 35dvh; /* 💡 横長画面に合わせて高さを最適化 */
+  max-height: 32dvh; /* 💡 下の3連ボタンを押し出さない完璧な高さに調整 */
   flex: 1;
   overflow-y: auto;
-  margin: 12px 0;
+  margin: 10px 0;
   padding: 6px 10px;
   background: rgba(0, 0, 0, 0.25);
   border-radius: 10px;
@@ -678,7 +678,7 @@ body.theme-taboo .timer-bar {
   flex-direction: row;
   justify-content: space-between;
   gap: 8px;
-  margin-top: 12px;
+  margin-top: 10px;
   width: 100%;
 }
 
