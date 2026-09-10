@@ -1,0 +1,16 @@
+{
+  "short_name": "PARTY GAME",
+  "name": "PARTY GAME",
+  "icons": [
+    {
+      "src": "icon.png",
+      "type": "image/png",
+      "sizes": "192x192"
+    }
+  ],
+  "start_url": "index.html",
+  "background_color": "#2c3e50",
+  "theme_color": "#2c3e50",
+  "display": "standalone",
+  "orientation": "landscape"
+}

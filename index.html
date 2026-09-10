@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
+  <title>PARTY GAME</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <div class="container">
+
+    <!-- 1. トップ画面 -->
+    <div id="menu-screen" class="screen active">
+      <div class="menu-card">
+        <h1 class="app-title">PARTY GAME</h1>
+        <button class="btn btn-main" id="btn-to-gesture-setup">
+          Heads Up!<br><small class="sub-text">(おでこ当てゲーム)</small>
+        </button>
+        <button class="btn btn-main" id="btn-to-taboo-setup">
+          カタカナーシ<br><small class="sub-text">(カタカナ語禁止ルール)</small>
+        </button>
+      </div>
+    </div>
+
+    <!-- 2-A. Heads Up! 準備画面 -->
+    <div id="gesture-setup-screen" class="screen">
+      <div class="screen-header">
+        <button class="btn-back btn-to-menu">✕ メニュー</button>
+        <div class="header-actions">
+          <button class="icon-btn btn-open-rule" title="ルール説明">📖</button>
+          <button class="icon-btn btn-open-settings" title="環境設定">⚙️</button>
+        </div>
+      </div>
+      
+      <h2>Heads Up!</h2>
+      <p class="setup-sub">カテゴリを選んでスタート！</p>
+
+      <div class="category-grid">
+        <div class="category-card active" data-category="all">
+          <span class="card-icon">🌟</span>
+          <span class="card-title">すべて</span>
+        </div>
+        <div class="category-card" data-category="salmons">
+          <span class="card-icon">🐟</span>
+          <span class="card-title">さーもんず</span>
+        </div>
+        <div class="category-card" data-category="animals">
+          <span class="card-icon">🐶</span>
+          <span class="card-title">どうぶつ</span>
+        </div>
+        <div class="category-card" data-category="sports">
+          <span class="card-icon">🏃</span>
+          <span class="card-title">スポーツ</span>
+        </div>
+        <div class="category-card" data-category="anime">
+          <span class="card-icon">🎬</span>
+          <span class="card-title">アニメ・ゲーム</span>
+        </div>
+        <div class="category-card" data-category="prefectures">
+          <span class="card-icon">🏞</span>
+          <span class="card-title">都道府県</span>
+        </div>
+        <div class="category-card" data-category="country">
+          <span class="card-icon">🗺</span>
+          <span class="card-title">国</span>
+        </div>
+        <div class="category-card" data-category="artist">
+          <span class="card-icon">👩‍🎤</span>
+          <span class="card-title">アーティスト</span>
+        </div>
+        <div class="category-card" data-category="celebrity">
+          <span class="card-icon">👨‍🎤</span>
+          <span class="card-title">有名人</span>
+        </div>
+        <div class="category-card" data-category="place">
+          <span class="card-icon">🏕</span>
+          <span class="card-title">場所</span>
+        </div>
+        <div class="category-card" data-category="food">
+          <span class="card-icon">🍔</span>
+          <span class="card-title">食材・料理</span>
+        </div>
+        <div class="category-card" data-category="business">
+          <span class="card-icon">💴</span>
+          <span class="card-title">ビジネス</span>
+        </div>
+        <div class="category-card" data-category="it">
+          <span class="card-icon">💻</span>
+          <span class="card-title">IT</span>
+        </div>
+      </div>
+
+      <button class="btn btn-success" id="btn-gesture-start">ゲームスタート！</button>
+    </div>
+
+    <!-- 2-B. カタカナーシ 準備画面 -->
+    <div id="taboo-setup-screen" class="screen">
+      <div class="screen-header">
+        <button class="btn-back btn-to-menu">✕ メニュー</button>
+        <div class="header-actions">
+          <button class="icon-btn btn-open-rule" title="ルール説明">📖</button>
+          <button class="icon-btn btn-open-settings" title="環境設定">⚙️</button>
+        </div>
+      </div>
+
+      <h2>カタカナーシ</h2>
+      <p class="setup-sub">カテゴリを選んでスタート！</p>
+      
+      <div class="category-grid">
+        <div class="category-card active" data-category="all">
+          <span class="card-icon">🌟</span>
+          <span class="card-title">すべて</span>
+        </div>
+        <div class="category-card" data-category="salmons">
+          <span class="card-icon">🐟</span>
+          <span class="card-title">さーもんず</span>
+        </div>
+        <div class="category-card" data-category="animals">
+          <span class="card-icon">🐶</span>
+          <span class="card-title">どうぶつ</span>
+        </div>
+        <div class="category-card" data-category="sports">
+          <span class="card-icon">🏃</span>
+          <span class="card-title">スポーツ</span>
+        </div>
+        <div class="category-card" data-category="anime">
+          <span class="card-icon">🎬</span>
+          <span class="card-title">アニメ・ゲーム</span>
+        </div>
+        <div class="category-card" data-category="prefectures">
+          <span class="card-icon">🏞</span>
+          <span class="card-title">都道府県</span>
+        </div>
+        <div class="category-card" data-category="country">
+          <span class="card-icon">🗺</span>
+          <span class="card-title">国</span>
+        </div>
+        <div class="category-card" data-category="artist">
+          <span class="card-icon">👩‍🎤</span>
+          <span class="card-title">アーティスト</span>
+        </div>
+        <div class="category-card" data-category="celebrity">
+          <span class="card-icon">👨‍🎤</span>
+          <span class="card-title">有名人</span>
+        </div>
+        <div class="category-card" data-category="place">
+          <span class="card-icon">🏕</span>
+          <span class="card-title">場所</span>
+        </div>
+        <div class="category-card" data-category="food">
+          <span class="card-icon">🍔</span>
+          <span class="card-title">食材・料理</span>
+        </div>
+        <div class="category-card" data-category="business">
+          <span class="card-icon">💴</span>
+          <span class="card-title">ビジネス</span>
+        </div>
+        <div class="category-card" data-category="it">
+          <span class="card-icon">💻</span>
+          <span class="card-title">IT</span>
+        </div>
+      </div>
+
+      <button class="btn btn-success" id="btn-taboo-start">ゲームスタート！</button>
+    </div>
+
+    <!-- 3-A. Heads Up! プレイ画面 -->
+    <div id="gesture-screen" class="screen">
+      <div class="timer-bar-container">
+        <div class="timer-bar" id="gesture-timer-bar"></div>
+      </div>
+
+      <div class="screen-header">
+        <button class="btn-back" id="btn-gesture-back">✕ 中断</button>
+        <button class="icon-btn btn-open-settings" title="環境設定">⚙️</button>
+      </div>
+
+      <div class="word" id="gesture-word">お題</div>
+      <div class="guide">下（おじぎ）：正解 / 上（天井）：パス</div>
+    </div>
+
+    <!-- 3-B. カタカナーシ プレイ画面 -->
+    <div id="taboo-screen" class="screen">
+      <div class="timer-bar-container">
+        <div class="timer-bar" id="taboo-timer-bar"></div>
+      </div>
+
+      <div class="screen-header">
+        <button class="btn-back" id="btn-taboo-back">✕ 中断</button>
+        <button class="icon-btn btn-open-settings" title="環境設定">⚙️</button>
+      </div>
+
+      <div class="word" id="taboo-word">お題</div>
+      <div class="guide">下（おじぎ）：正解 / 上（天井）：パス</div>
+    </div>
+
+  </div>
+
+  <!-- モーダル1: 環境設定モーダル -->
+  <div class="modal-overlay" id="settings-modal">
+    <div class="modal-content">
+      <h3 class="modal-title">⚙️ 環境設定</h3>
+      
+      <div class="setting-group">
+        <label>制限時間（最大 59分59秒）</label>
+        <div class="picker-container">
+          <div class="picker-highlight"></div>
+          <div class="picker-column" id="picker-min">
+            <div class="picker-wheel" id="wheel-min"></div>
+          </div>
+          <span class="picker-unit">分</span>
+          <div class="picker-column" id="picker-sec">
+            <div class="picker-wheel" id="wheel-sec"></div>
+          </div>
+          <span class="picker-unit">秒</span>
+        </div>
+      </div>
+
+      <div class="setting-group">
+        <label for="setting-difficulty">難易度</label>
+        <select id="setting-difficulty">
+          <option value="all">すべて</option>
+          <option value="1">難易度 1（かんたん）</option>
+          <option value="2">難易度 2（ふつう）</option>
+          <option value="3">難易度 3（むずかしい）</option>
+          <option value="4">難易度 4（激きも）</option>
+        </select>
+      </div>
+
+      <button class="btn modal-btn" id="btn-close-settings">保存して閉じる</button>
+    </div>
+  </div>
+
+  <!-- モーダル2: ルール説明モーダル -->
+  <div class="modal-overlay" id="rule-modal">
+    <div class="modal-content">
+      <h3 class="modal-title" id="rule-modal-title">📖 ルール説明</h3>
+      <div class="rule-body" id="rule-modal-body"></div>
+      
+      <button class="btn modal-btn" id="btn-close-rule">閉じる</button>
+    </div>
+  </div>
+
+  <!-- モーダル3: リザルトモーダル -->
+  <div class="modal-overlay" id="result-modal">
+    <div class="modal-content">
+      <h3 class="modal-title">結果発表</h3>
+      <p id="result-summary" style="margin-bottom: 10px; font-weight: bold;"></p>
+      
+      <!-- 結果一覧表示領域 -->
+      <div id="result-list" class="result-list"></div>
+      
+      <!-- 横並びアクションボタン -->
+      <div class="result-actions">
+        <button id="btn-result-retry" class="btn btn-main" style="background-color: #2ecc71;">同じお題でもう一度</button>
+        <button id="btn-result-change-setup" class="btn btn-main" style="background-color: #3498db;">お題を変更する</button>
+        <button id="btn-result-to-title" class="btn btn-main" style="background-color: #7f8c8d;">タイトルに戻る</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- JS ファイル読み込み -->
+  <script src="js/words.js"></script>
+  <script src="js/common.js"></script>
+  <script src="js/game-gesture.js"></script>
+  <script src="js/game-taboo.js"></script>
+</body>
+</html>

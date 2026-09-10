@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>単語パーティーゲーム</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <div class="container">
+
+    <!-- 1. トップ画面（シンプルにゲーム選択のみ） -->
+    <div id="menu-screen" class="screen active">
+      <div class="menu-card">
+        <h1 class="app-title">PARTY GAME</h1>
+        <button class="btn btn-main" id="btn-to-gesture-setup">
+          Heads Up! 風<br><small class="sub-text">(おでこ当てゲーム)</small>
+        </button>
+        <button class="btn btn-main" id="btn-to-taboo-setup">
+          カタカナーシ<br><small class="sub-text">(カタカナ語禁止ルール)</small>
+        </button>
+      </div>
+    </div>
+
+    <!-- 2-A. Heads Up! 準備・カテゴリ選択画面 -->
+    <div id="gesture-setup-screen" class="screen">
+      <div class="screen-header">
+        <button class="btn-back btn-to-menu">✕ メニュー</button>
+        <div class="header-actions">
+          <button class="icon-btn btn-open-rule" title="ルール説明">📖</button>
+          <button class="icon-btn btn-open-settings" title="環境設定">⚙️</button>
+        </div>
+      </div>
+      
+      <h2>Heads Up! 風</h2>
+      <p class="setup-sub">カテゴリを選んでスタート！</p>
+
+      <!-- カテゴリカード群 -->
+      <div class="category-grid">
+        <div class="category-card active" data-category="all">
+          <span class="card-icon">🌟</span>
+          <span class="card-title">すべて</span>
+        </div>
+        <div class="category-card" data-category="animals">
+          <span class="card-icon">🐶</span>
+          <span class="card-title">どうぶつ</span>
+        </div>
+        <div class="category-card" data-category="actions">
+          <span class="card-icon">🏃</span>
+          <span class="card-title">あくしょん</span>
+        </div>
+        <div class="category-card" data-category="anime">
+          <span class="card-icon">🎬</span>
+          <span class="card-title">アニメ・キャラ</span>
+        </div>
+      </div>
+
+      <button class="btn btn-success" id="btn-gesture-start">ゲームスタート！</button>
+    </div>
+
+    <!-- 2-B. カタカナーシ 準備画面 -->
+    <div id="taboo-setup-screen" class="screen">
+      <div class="screen-header">
+        <button class="btn-back btn-to-menu">✕ メニュー</button>
+        <div class="header-actions">
+          <button class="icon-btn btn-open-rule" title="ルール説明">📖</button>
+          <button class="icon-btn btn-open-settings" title="環境設定">⚙️</button>
+        </div>
+      </div>
+
+      <h2>カタカナーシ</h2>
+      <p class="setup-sub">カタカナ語を使わずに説明しよう！</p>
+      
+      <div class="info-card">
+        <p>説明者は画面に表示される単語を<strong>カタカナ語（和製英語・外来語含む）を使わずに</strong>相手に説明してください！</p>
+      </div>
+
+      <button class="btn btn-success" id="btn-taboo-start">ゲームスタート！</button>
+    </div>
+
+    <!-- 3-A. Heads Up! プレイ画面 -->
+    <div id="gesture-screen" class="screen">
+      <div class="timer-bar-container">
+        <div class="timer-bar" id="gesture-timer-bar"></div>
+      </div>
+
+      <div class="screen-header">
+        <button class="btn-back" id="btn-gesture-back">✕ 中断</button>
+        <button class="icon-btn btn-open-settings" title="環境設定">⚙️</button>
+      </div>
+
+      <div class="word" id="gesture-word">お題</div>
+      <div class="guide">下（おじぎ）：正解 / 上（天井）：パス</div>
+    </div>
+
+    <!-- 3-B. カタカナーシ プレイ画面 -->
+    <div id="taboo-screen" class="screen">
+      <div class="timer-bar-container">
+        <div class="timer-bar" id="taboo-timer-bar"></div>
+      </div>
+
+      <div class="screen-header">
+        <button class="btn-back" id="btn-taboo-back">✕ 中断</button>
+        <button class="icon-btn btn-open-settings" title="環境設定">⚙️</button>
+      </div>
+
+      <div class="guide" style="margin-bottom: 5px;">以下の単語を使わずに説明！</div>
+      <div class="word" id="taboo-word">お題</div>
+      <button class="btn btn-success" id="btn-taboo-next">次の単語へ</button>
+    </div>
+
+  </div>
+
+  <!-- モーダル1: 環境設定モーダル -->
+  <div class="modal-overlay" id="settings-modal">
+    <div class="modal-content">
+      <h3 class="modal-title">⚙️ 環境設定</h3>
+      
+      <div class="setting-group">
+        <label>制限時間（最大 59分59秒）</label>
+        <div class="picker-container">
+          <div class="picker-highlight"></div>
+          <div class="picker-column" id="picker-min">
+            <div class="picker-wheel" id="wheel-min"></div>
+          </div>
+          <span class="picker-unit">分</span>
+          <div class="picker-column" id="picker-sec">
+            <div class="picker-wheel" id="wheel-sec"></div>
+          </div>
+          <span class="picker-unit">秒</span>
+        </div>
+      </div>
+
+      <div class="setting-group">
+        <label for="setting-difficulty">難易度</label>
+        <select id="setting-difficulty">
+          <option value="all" selected>すべて</option>
+          <option value="easy">かんたん</option>
+          <option value="normal">ふつう</option>
+          <option value="hard">むずかしい</option>
+        </select>
+      </div>
+
+      <button class="btn" id="btn-close-settings" style="width: 100%;">保存して閉じる</button>
+    </div>
+  </div>
+
+  <!-- モーダル2: ルール説明モーダル -->
+  <div class="modal-overlay" id="rule-modal">
+    <div class="modal-content">
+      <h3 class="modal-title" id="rule-modal-title">📖 ルール説明</h3>
+      <div class="rule-body" id="rule-modal-body"></div>
+      <button class="btn" id="btn-close-rule" style="width: 100%; margin-top: 15px;">閉じる</button>
+    </div>
+  </div>
+
+  <script src="js/words.js"></script>
+  <script src="js/common.js"></script>
+  <script src="js/game-gesture.js"></script>
+  <script src="js/game-taboo.js"></script>
+</body>
+</html>
