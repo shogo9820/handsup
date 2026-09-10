@@ -1,4 +1,21 @@
 // ===================================================
+// 💡 【追加】PWA・スマホでの横画面（ランドスケープ）強制ロック
+// ===================================================
+function lockLandscape() {
+  if (screen.orientation && typeof screen.orientation.lock === 'function') {
+    screen.orientation.lock('landscape').catch((err) => {
+      console.log("画面ロックは拒否されました（PCブラウザなど）:", err);
+    });
+  }
+}
+
+// ページ読み込み時、およびアプリがバックグラウンドから復帰した時に横画面を強制
+window.addEventListener('DOMContentLoaded', lockLandscape);
+window.addEventListener('focus', lockLandscape);
+// 画面のどこかを初めてタップした瞬間に、確実に横にロックさせる（ブラウザ制限の突破用）
+window.addEventListener('click', lockLandscape, { once: true });
+
+// ===================================================
 // グローバルアプリ状態
 // ===================================================
 const appState = {
