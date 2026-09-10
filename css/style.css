@@ -4,19 +4,19 @@
   --bg-correct: #2ecc71;
   --bg-pass: #e74c3c;
   
+  /* 1. Heads Up! 用テーマカラー（ポップなオレンジ） */
   --theme-gesture: #e67e22;
   --theme-gesture-dark: #d35400;
   --theme-gesture-light: #f39c12;
 
+  /* 2. カタカナーシ 用テーマカラー（シックなパープル） */
   --theme-taboo: #8e44ad;
   --theme-taboo-dark: #7d3c98;
   --theme-taboo-light: #9b59b6;
 
-  /* 💡 PWA・セーフエリアのバグを防ぐ絶対的な高さ定義 */
+  /* 💡 セーフエリアの変数を定義 */
   --safe-top: env(safe-area-inset-top, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
-  --safe-left: env(safe-area-inset-left, 0px);
-  --safe-right: env(safe-area-inset-right, 0px);
 }
 
 * {
@@ -31,79 +31,86 @@
 
 body {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  /* 💡 100vhの代わりに dvh (Dynamic Viewport Height) を使い、余計なスクロールを完全防止 */
+  /* 💡 100vhの代わりに dvh (Dynamic Viewport Height) を使い、下にずれるバグを完全防止 */
   height: 100dvh;
   width: 100vw;
   background-color: var(--bg-main);
   color: #fff;
   text-align: center;
   overflow: hidden;
-  position: relative;
+  transition: background-color 0.3s ease;
 }
 
 /* ゲームごとのテーマ背景色連動 */
 body.theme-gesture { background-color: var(--theme-gesture-dark) !important; }
 body.theme-taboo { background-color: var(--theme-taboo-dark) !important; }
+
+/* フィードバックカラー（正解/パス） */
 body.correct { background-color: var(--bg-correct) !important; }
 body.pass { background-color: var(--bg-pass) !important; }
 
-/* ==================================================
-   全画面レイアウトのベース
-   ================================================== */
-.screen {
-  display: none;
-  width: 100%; 
-  height: 100dvh;
-  /* 💡 横持ち時、左右のセーフエリア（ノッチ）に要素が被らないようにガード */
-  padding: 24px calc(15px + var(--safe-right)) 15px calc(15px + var(--safe-left));
+.container {
+  width: 100%;
+  height: 100dvh; /* 💡 100dvhに変更 */
+  display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  position: absolute;
-  top: 0;
-  left: 0;
-  box-sizing: border-box;
-}
-.screen.active { display: flex; }
-
-/* 💡 準備画面が下にズレるのを防ぐため、高さを100dvhに統一し、余白を徹底削減 */
-#gesture-setup-screen.active,
-#taboo-setup-screen.active {
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  align-items: center;
-  height: 100dvh;
-  padding: calc(20px + var(--safe-top)) calc(15px + var(--safe-right)) calc(15px + var(--safe-bottom)) calc(15px + var(--safe-left));
+  position: relative;
 }
 
 /* ==================================================
-   タイムバー（最上部キワに固定）
+   タイムバー（太さ16px・高視認性）
    ================================================== */
 .timer-bar-container {
-  position: fixed !important;
+  position: fixed !important; /* 💡 確実に画面の最上部キワに固定 */
   top: 0 !important;
   left: 0 !important;
   right: 0 !important;
-  height: 8px;
+  height: 16px;
   background: rgba(0, 0, 0, 0.5);
-  z-index: 9999 !important;
+  box-shadow: inset 0 1px 3px rgba(0,0,0,0.5);
+  z-index: 9999 !important; /* 💡 最前面に */
 }
+
 .timer-bar {
   width: 100%;
   height: 100%;
   background-color: #00e676;
+  border-radius: 0 8px 8px 0;
+  box-shadow: 0 0 8px rgba(0, 230, 118, 0.6);
+  transition: width 0.05s linear, background-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+/* テーマ別タイマーバー色 */
+body.theme-gesture .timer-bar { 
+  background-color: #00e5ff; 
+  box-shadow: 0 0 8px rgba(0, 229, 255, 0.6);
+}
+
+body.theme-taboo .timer-bar { 
+  background-color: #00e676; 
+  box-shadow: 0 0 8px rgba(0, 230, 118, 0.6);
+}
+
+.timer-bar.warning { 
+  background-color: #ffea00 !important; 
+  box-shadow: 0 0 10px rgba(255, 234, 0, 0.8) !important;
+}
+
+.timer-bar.danger { 
+  background-color: #ff1744 !important; 
+  box-shadow: 0 0 12px rgba(255, 23, 68, 0.9) !important;
 }
 
 /* ==================================================
-   画面共通ヘッダー（位置を引き上げ）
+   画面共通ヘッダー（タイマーバーと被らない位置）
    ================================================== */
 .screen-header {
   position: absolute;
-  /* 💡 タイムバーの直下、かつ左右のノッチを避ける位置に絶対配置 */
-  top: calc(12px + var(--safe-top));
-  left: calc(15px + var(--safe-left));
-  right: calc(15px + var(--safe-right));
+  top: calc(22px + var(--safe-top)); /* 💡 セーフエリア（ノッチ）分を考慮 */
+  left: 15px;
+  right: 15px;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -119,47 +126,252 @@ body.pass { background-color: var(--bg-pass) !important; }
   background: rgba(0, 0, 0, 0.4);
   border: none;
   color: #fff;
-  font-size: 1.1rem;
-  width: 36px;
-  height: 36px;
+  font-size: 1rem;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
   cursor: pointer;
   display: flex;
   justify-content: center;
   align-items: center;
 }
+.icon-btn:active { transform: scale(0.92); }
 
 .btn-back {
   background: rgba(0, 0, 0, 0.4);
   border: none;
   color: #fff;
-  padding: 6px 14px;
+  padding: 4px 12px;
   border-radius: 20px;
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   font-weight: bold;
   cursor: pointer;
 }
+.btn-back:active { transform: scale(0.95); }
 
-/* ==================================================
-   ボタン共通・スタートボタンのはみ出し対策
-   ================================================== */
+/* ボタン共通 */
 .btn {
   background-color: #3498db;
   color: #fff;
   border: none;
-  padding: 10px 18px;
+  padding: 8px 16px;
   font-size: 0.95rem;
   font-weight: bold;
   border-radius: 20px;
   cursor: pointer;
   box-shadow: 0 4px 10px rgba(0,0,0,0.3);
   width: 100%;
-  max-width: 240px;
+  max-width: 260px;
   flex-shrink: 0;
 }
 .btn:active { transform: scale(0.98); }
+.btn-main { padding: 9px 20px !important; font-size: 1rem !important; margin-bottom: 2px; }
+.btn-success { background-color: var(--bg-correct); }
+.sub-text { font-size: 0.75rem; font-weight: normal; }
 
-/* 💡 横持ち画面で絶対にはみ出さないよう、固定位置を廃止し、自然なサイズに制限 */
+/* メニュー画面でのテーマボタン設定 */
+#btn-to-gesture-setup {
+  background-color: var(--theme-gesture);
+}
+#btn-to-gesture-setup:hover, #btn-to-gesture-setup:active {
+  background-color: var(--theme-gesture-dark);
+}
+
+#btn-to-taboo-setup {
+  background-color: var(--theme-taboo);
+}
+#btn-to-taboo-setup:hover, #btn-to-taboo-setup:active {
+  background-color: var(--theme-taboo-dark);
+}
+
+/* モーダル専用ボタンのスタイル調整 */
+.modal-btn {
+  display: block;
+  width: 85%;
+  max-width: 260px;
+  margin: 12px auto 0 auto;
+  padding: 8px 16px;
+  font-size: 0.95rem;
+}
+
+/* メニュー画面・カード設定 (完全中央寄せ) */
+.app-title {
+  font-size: 1.8rem;
+  font-weight: 900;
+  margin-bottom: 12px;
+  letter-spacing: 2px;
+  text-align: center;
+}
+
+.menu-card {
+  background: rgba(0, 0, 0, 0.25);
+  padding: 20px 30px;
+  border-radius: 18px;
+  width: 85%;
+  max-width: 480px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  margin: 0 auto;
+}
+
+/* ==================================================
+   全画面レイアウト
+   ================================================== */
+.screen {
+  display: none;
+  width: 100%; 
+  height: 100dvh; /* 💡 100dvhに変更 */
+  padding: 30px 15px 15px 15px;
+  flex-direction: column;
+  justify-content: center; 
+  align-items: center;
+  text-align: center;
+  box-sizing: border-box;
+}
+.screen.active { display: flex; }
+
+/* 準備画面（要素が多いので上下いっぱいに分散） */
+#gesture-setup-screen,
+#taboo-setup-screen {
+  justify-content: space-between;
+  padding-top: 35px;
+  padding-bottom: 10px;
+}
+
+/* active クラスがついている（現在表示中の）準備画面 */
+#gesture-setup-screen.active,
+#taboo-setup-screen.active {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+  height: 100dvh; /* 💡 100dvhに変更 */
+  box-sizing: border-box;
+  padding: calc(6px + var(--safe-top)) 16px calc(32px + var(--safe-bottom)) 16px;
+  overflow: hidden;
+}
+
+/* 準備画面タイトルヘッダー部分 */
+.setup-header-group {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+#gesture-setup-screen h2,
+#taboo-setup-screen h2 {
+  margin: 0 !important;
+  padding: 0 !important;
+  font-size: 1.35rem;
+  text-align: center;
+  line-height: 1.2;
+}
+
+.setup-sub { 
+  margin: 4px 0 0 0 !important;
+  padding: 0 !important;
+  font-size: 0.75rem; 
+  opacity: 0.85; 
+  text-align: center;
+  flex-shrink: 0;
+}
+
+/* ==================================================
+   カテゴリカード
+   ================================================== */
+.category-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  width: 95%;
+  max-width: 800px;
+  margin: 10px 0 !important;
+  justify-content: center;
+  align-items: center;
+  /* 💡 横持ち画面に合わせて、グリッドの最大高さを全自動で縮めてボタンのはみ出しを防止 */
+  max-height: calc(100dvh - var(--safe-top) - var(--safe-bottom) - 120px);
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 5px;
+}
+
+.category-card {
+  background: rgba(255, 255, 255, 0.15);
+  border: 2px solid transparent;
+  border-radius: 10px;
+  padding: 4px;
+  height: 60px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  opacity: 0.65;
+  transition: all 0.2s cubic-bezier(0.2, 0, 0, 1);
+}
+
+.category-card:active {
+  transform: scale(0.96);
+}
+
+.category-card.active {
+  opacity: 1;
+  background: #ffffff !important;
+  transform: translateY(-2px);
+}
+
+.category-card.active .card-title,
+.category-card.active .card-icon {
+  color: #2c3e50;
+  font-weight: 900;
+}
+
+#gesture-setup-screen .category-card.active {
+  border: 2px solid var(--theme-gesture);
+  box-shadow: 0 4px 12px rgba(230, 126, 34, 0.5), 0 0 0 2px rgba(255, 255, 255, 0.8);
+}
+
+#taboo-setup-screen .category-card.active {
+  border: 2px solid var(--theme-taboo);
+  box-shadow: 0 4px 12px rgba(142, 68, 173, 0.5), 0 0 0 2px rgba(255, 255, 255, 0.8);
+}
+
+.card-icon { 
+  font-size: 1.4rem; 
+  margin-bottom: 1px; 
+  transition: transform 0.2s ease;
+}
+
+.category-card.active .card-icon {
+  transform: scale(1.1);
+}
+
+.card-title { 
+  font-size: 0.75rem; 
+  font-weight: bold; 
+  text-align: center;
+  white-space: nowrap;
+}
+
+.info-card {
+  background: rgba(0, 0, 0, 0.2);
+  padding: 10px 16px;
+  border-radius: 10px;
+  max-width: 480px;
+  margin: 8px auto;
+  font-size: 0.8rem;
+  line-height: 1.3;
+  text-align: center;
+}
+
+/* 💡 ゲームスタートボタンの強制固定を解除し、自然にはみ出さず配置 */
 #btn-gesture-start,
 #btn-taboo-start {
   position: relative !important;
@@ -167,110 +379,71 @@ body.pass { background-color: var(--bg-pass) !important; }
   left: auto !important;
   transform: none !important;
   width: 100%;
-  max-width: 280px;
-  margin: 0 auto calc(5px + var(--safe-bottom)) auto !important;
-  padding: 10px 0;
-  font-size: 1.05rem;
+  max-width: 400px;
+  margin: 0 auto !important;
+  padding: 12px 0;
+  font-size: 1.1rem;
+  font-weight: bold;
   z-index: 10;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+  flex-shrink: 0;
 }
 
-/* ==================================================
-   メニュー・準備画面の要素調整（横持ち最適化）
-   ================================================== */
-.app-title {
-  font-size: 1.6rem;
-  font-weight: 900;
-  margin-bottom: 8px;
-}
-
-.menu-card {
-  background: rgba(0, 0, 0, 0.25);
-  padding: 15px 25px;
-  border-radius: 18px;
-  width: 90%;
-  max-width: 440px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  margin: 0 auto;
-}
-
-.setup-header-group h2 {
-  font-size: 1.25rem;
-  margin-top: 5px !important;
-}
-
-.setup-sub { 
-  font-size: 0.8rem; 
-  opacity: 0.85; 
-  margin-top: 2px !important;
-}
-
-/* 💡 カテゴリグリッドがスタートボタンを押し出さないよう、横長画面用に高さを厳しく制限 */
-.category-grid {
-  flex: 1;
-  width: 100%;
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 6px;
-  max-height: calc(100vh - var(--safe-top) - var(--safe-bottom) - 120px);
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
-  margin: 8px 0 !important;
-  padding: 2px;
-}
-
-.category-card {
-  background: rgba(255, 255, 255, 0.15);
-  border: 2px solid transparent;
-  border-radius: 8px;
-  height: 52px; /* 少しコンパクトに */
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  opacity: 0.65;
-}
-.category-card.active {
-  opacity: 1;
-  background: #ffffff !important;
-}
-.category-card.active .card-title,
-.category-card.active .card-icon {
-  color: #2c3e50;
-}
-#gesture-setup-screen .category-card.active { border: 2px solid var(--theme-gesture); }
-#taboo-setup-screen .category-card.active { border: 2px solid var(--theme-taboo); }
-
-.card-icon { font-size: 1.2rem; }
-.card-title { font-size: 0.7rem; font-weight: bold; }
-
-/* ==================================================
-   お題表示（プレイ画面）
-   ================================================== */
+/* お題表示（プレイ画面） */
 #gesture-screen, #taboo-screen {
+  padding-bottom: 90px;
   justify-content: space-between;
 }
+
+/* 💡 タイムバー直下の中断ボタンなどのヘッダー位置を上に引き上げる */
+#gesture-screen .screen-header,
+#taboo-screen .screen-header {
+  padding-top: calc(4px + var(--safe-top)) !important;
+  margin-bottom: 0 !important;
+}
+
 .guide-container {
   width: 100%;
   display: flex;
   flex-direction: column;
+  gap: 4px;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
 }
-.guide { font-size: 0.85rem; font-weight: bold; }
-.guide-icon { font-size: 1.1rem; }
+
+.guide { 
+  font-size: 0.9rem; 
+  opacity: 0.85; 
+  font-weight: bold; 
+  text-align: center; 
+  letter-spacing: 1px;
+}
+
+.guide-icon {
+  font-size: 1.3rem;
+  margin-bottom: 2px;
+  animation: pulse 1.5s infinite ease-in-out;
+}
 
 .word {
-  font-size: 3.8rem; /* 横持ち画面に合わせて僅かに縮小し、はみ出し防止 */
+  font-size: 4.5rem;
   font-weight: 900;
+  line-height: 1.1;
   margin: auto 0;
+  word-break: break-all;
+  text-shadow: 0 4px 12px rgba(0,0,0,0.4);
+  text-align: center;
   flex: 1;
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+@keyframes pulse {
+  0% { opacity: 0.5; transform: scale(0.95); }
+  50% { opacity: 1; transform: scale(1.05); }
+  100% { opacity: 0.5; transform: scale(0.95); }
 }
 
 /* ==================================================
@@ -279,42 +452,242 @@ body.pass { background-color: var(--bg-pass) !important; }
 .modal-overlay {
   display: none;
   position: fixed;
-  /* 💡 画面全体を完全に覆い、PWAの謎の余白を許さない */
-  top: 0; left: 0; right: 0; bottom: 0;
-  width: 100vw; height: 100dvh;
+  /* 💡 画面全体を完全に覆い、PWAの謎の余白・タップのズレを許さない */
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100vw;
+  height: 100dvh;
   background: rgba(0, 0, 0, 0.8);
   justify-content: center;
   align-items: center;
   z-index: 99999;
 }
-.modal-overlay.active { display: flex; }
+
+.modal-overlay.active {
+  display: flex;
+}
 
 .modal-content {
   background: #34495e;
-  padding: 20px;
+  padding: 20px 16px;
   border-radius: 18px;
-  width: 85%;
-  max-width: 440px;
-  /* 💡 横持ち画面で閉じるボタンがはみ出さないよう、最大高さを厳しく制限しスクロール可能に */
+  width: 90%;
+  max-width: 460px;
+  /* 💡 横持ち画面で閉じるボタンがはみ出さないよう、最大高さを制限し自動スクロール可能に */
   max-height: 85dvh;
   overflow-y: auto;
+  text-align: center;
   box-sizing: border-box;
 }
 
-/* リザルト用モーダル調整 */
+.modal-title {
+  margin-bottom: 10px;
+  text-align: center;
+}
+
+.setting-group {
+  margin-bottom: 10px;
+  text-align: center;
+}
+
+.setting-group label {
+  display: block;
+  font-weight: bold;
+  margin-bottom: 4px;
+  font-size: 0.8rem;
+  text-align: center;
+}
+
+.setting-group select {
+  width: 100%;
+  padding: 6px;
+  border-radius: 8px;
+  border: none;
+  font-size: 0.9rem;
+  text-align-last: center;
+}
+
+.rule-body {
+  font-size: 0.85rem;
+  line-height: 1.5;
+  text-align: left;
+}
+
+.rule-body ol {
+  padding-left: 18px;
+  margin-top: 6px;
+}
+
+.rule-body li {
+  margin-bottom: 4px;
+}
+
+/* ドラムピッカー (中央配置) */
+.picker-container {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 90px;
+  background: #1e2b37;
+  border-radius: 12px;
+  overflow: hidden;
+  margin: 0 auto;
+}
+
+.picker-highlight {
+  position: absolute;
+  top: 29px;
+  left: 10px;
+  right: 10px;
+  height: 32px;
+  background: rgba(52, 152, 219, 0.25);
+  border-top: 2px solid #3498db;
+  border-bottom: 2px solid #3498db;
+  border-radius: 6px;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.picker-container::before, .picker-container::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 29px;
+  z-index: 3;
+  pointer-events: none;
+}
+
+.picker-container::before {
+  top: 0;
+  background: linear-gradient(to bottom, rgba(30, 43, 55, 0.95), rgba(30, 43, 55, 0));
+}
+
+.picker-container::after {
+  bottom: 0;
+  background: linear-gradient(to top, rgba(30, 43, 55, 0.95), rgba(30, 43, 55, 0));
+}
+
+.picker-column {
+  width: 60px;
+  height: 90px;
+  overflow-y: scroll;
+  scroll-snap-type: y mandatory;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  z-index: 1;
+}
+
+.picker-column::-webkit-scrollbar {
+  display: none;
+}
+
+.picker-wheel {
+  padding: 29px 0;
+}
+
+.picker-item {
+  height: 32px;
+  line-height: 32px;
+  text-align: center;
+  font-size: 1rem;
+  font-weight: bold;
+  color: #bdc3c7;
+  scroll-snap-align: center;
+}
+
+.picker-unit {
+  font-size: 0.85rem;
+  font-weight: bold;
+  margin: 0 4px;
+  z-index: 2;
+  color: #ecf0f1;
+}
+
+/* ==================================================
+   リザルト（結果表示）用スタイル【拡張版】
+   ================================================== */
 #result-modal .modal-content {
-  max-width: 500px;
-  max-height: 90dvh;
+  width: 95%;
+  max-width: 600px;
+  max-height: 90dvh; /* 💡 100dvh基準に変更 */
+  display: flex;
+  flex-direction: column;
 }
+
 .result-list {
-  max-height: 35dvh;
+  max-height: 35dvh; /* 💡 横長画面に合わせて高さを最適化 */
+  flex: 1;
   overflow-y: auto;
+  margin: 12px 0;
+  padding: 6px 10px;
+  background: rgba(0, 0, 0, 0.25);
+  border-radius: 10px;
+  text-align: left;
 }
+
+.result-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  font-size: 0.95rem;
+}
+
+.result-item:last-child {
+  border-bottom: none;
+}
+
+.result-item .word-name {
+  flex: 1;
+  text-align: left;
+  font-weight: bold;
+}
+
+.result-divider {
+  margin: 0 10px;
+  opacity: 0.5;
+  font-weight: normal;
+}
+
+.result-badge {
+  font-size: 0.8rem;
+  font-weight: bold;
+  padding: 3px 10px;
+  border-radius: 12px;
+  color: #fff;
+  flex-shrink: 0;
+  min-width: 50px;
+  text-align: center;
+}
+
+.result-badge.correct {
+  background-color: var(--bg-correct);
+}
+
+.result-badge.pass {
+  background-color: var(--bg-pass);
+}
+
 .result-actions {
   display: flex;
-  gap: 6px;
+  flex-direction: row;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 12px;
+  width: 100%;
 }
+
 .result-actions .btn {
-  font-size: 0.8rem;
-  padding: 8px 2px;
+  flex: 1;
+  width: auto;
+  max-width: none;
+  padding: 10px 4px;
+  font-size: 0.85rem;
+  white-space: nowrap;
+  margin-bottom: 0 !important;
 }
