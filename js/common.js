@@ -376,10 +376,12 @@ document.querySelectorAll('.btn-open-rule').forEach(btn => {
       titleElem.textContent = "📖 Heads Up! ルール";
       bodyElem.innerHTML = `
         <ol>
-          <li>スマホを横向きにして<strong>おでこに当てて</strong>画面を回答者に見せます。</li>
+          <li>スマホを横向きにして<strong>おでこに当てて</strong>画面を説明者に見せます。</li>
           <li>周りの人は画面に映ったお題をジェスチャーや言葉でヒントを出します。</li>
-          <li>正解したらスマホ画面を<strong>「下（おじぎ）」</strong>に倒します。</li>
-          <li>パスしたい時はスマホ画面を<strong>「上（天井）」</strong>に向けます。</li>
+          <li>正解したらスマホ画面を<strong>「下（おじぎ）」</strong>に倒す。</li>
+          <li>もしくは、スマホ画面を<strong>「ダブルタップ」</strong>します。</li>
+          <li>パスしたい時はスマホ画面を<strong>「上（天井）」</strong>に向ける。</li>
+          <li>もしくは、スマホ画面の単語を<strong>「上にフリック」</strong>します。</li>
         </ol>
       `;
     } else {
@@ -388,8 +390,10 @@ document.querySelectorAll('.btn-open-rule').forEach(btn => {
         <ol>
           <li>説明者は画面に表示されたお題を確認します。</li>
           <li><strong>カタカナ語（外来語・和製英語）を一切使わずに</strong>お題を説明してください。</li>
-          <li>正解したらスマホ画面を<strong>「下（おじぎ）」</strong>に倒します。</li>
-          <li>パスしたい時はスマホ画面を<strong>「上（天井）」</strong>に向けます。</li>
+          <li>正解したらスマホ画面を<strong>「下（おじぎ）」</strong>に倒す。</li>
+          <li>もしくは、スマホ画面を<strong>「ダブルタップ」</strong>します。</li>
+          <li>パスしたい時はスマホ画面を<strong>「上（天井）」</strong>に向ける。</li>
+          <li>もしくは、スマホ画面の単語を<strong>「上にフリック」</strong>します。</li>
           <li>うっかりカタカナ語を言ってしまうとペナルティ！</li>
         </ol>
       `;
