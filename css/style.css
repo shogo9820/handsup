@@ -222,7 +222,7 @@ body.theme-taboo .timer-bar {
    全画面レイアウト
    ================================================== */
 .screen {
-  display: none;
+  display: none !important;
   width: 100%; 
   height: 100dvh; /* 💡 100dvhに変更 */
   padding: 30px 15px 15px 15px;
@@ -232,7 +232,7 @@ body.theme-taboo .timer-bar {
   text-align: center;
   box-sizing: border-box;
 }
-.screen.active { display: flex; }
+.screen.active {   display: flex !important;  }
 
 /* 準備画面（要素が多いので上下いっぱいに分散） */
 #gesture-setup-screen,
