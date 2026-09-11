@@ -635,3 +635,50 @@ stopCommonGame = function() {
   stopTouchGame(gestureScreen);
   stopTouchGame(tabooScreen);
 };
+
+// ===================================================
+// 💡 【修正】PWA・スマホでの横画面強制 ＆ 回転時のズレ完全リセット
+// ===================================================
+function lockLandscape() {
+  if (screen.orientation && typeof screen.orientation.lock === 'function') {
+    screen.orientation.lock('landscape').catch((err) => {
+      console.log("画面ロックは拒否されました:", err);
+    });
+  }
+}
+
+/**
+ * 💡 一度縦に持ち替えて、横に戻した時の描画バグを完全にリセットする関数
+ */
+function resetLayoutOnResize() {
+  // 横画面（ランドスケープ）のときだけ実行
+  if (window.innerWidth > window.innerHeight) {
+    // 画面全体の高さを強制的に再計算させる
+    document.body.style.height = '100dvh';
+    
+    // 💡 iPhoneのセーフエリア計算バグを強制リフレッシュする魔法の処理
+    // ほんの一瞬（0.01秒）だけ画面を1ピクセル動かすことで、ブラウザに「正しい横画面の余白」を再計算させます
+    window.scrollTo(0, 0);
+    
+    // 現在アクティブな画面（表示中のスクリーン）があれば、強制的に再描画イベントを走らせる
+    const activeScreen = document.querySelector('.screen.active');
+    if (activeScreen) {
+      activeScreen.style.display = 'none';
+      // 10ミリ秒後に再表示してCSSを強制リロード
+      setTimeout(() => {
+        activeScreen.style.display = 'flex';
+      }, 10);
+    }
+  }
+}
+
+// アプリ起動時や復帰時に横画面を強制
+window.addEventListener('DOMContentLoaded', lockLandscape);
+window.addEventListener('focus', lockLandscape);
+window.addEventListener('click', lockLandscape, { once: true });
+
+// 💡 【重要】画面のサイズ変更（回転）が発生した瞬間をキャッチしてズレを直す
+window.addEventListener('resize', resetLayoutOnResize);
+window.addEventListener('orientationchange', () => {
+  setTimeout(resetLayoutOnResize, 200); // 回転アニメーションが終わるのを少し待ってから実行
+});
