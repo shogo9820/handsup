@@ -197,40 +197,47 @@
 
   </div>
 
-  <!-- モーダル1: 環境設定モーダル -->
-  <div class="modal-overlay" id="settings-modal">
-    <div class="modal-content">
-      <h3 class="modal-title">⚙️ 環境設定</h3>
-      
-      <div class="setting-group">
-        <label>制限時間（最大 59分59秒）</label>
-        <div class="picker-container">
-          <div class="picker-highlight"></div>
-          <div class="picker-column" id="picker-min">
-            <div class="picker-wheel" id="wheel-min"></div>
-          </div>
-          <span class="picker-unit">分</span>
-          <div class="picker-column" id="picker-sec">
-            <div class="picker-wheel" id="wheel-sec"></div>
-          </div>
-          <span class="picker-unit">秒</span>
-        </div>
-      </div>
+<!-- 環境設定モーダルの中身（差し替え用） -->
+<div class="modal-content">
+  <h3 class="modal-title">⚙ 環境設定</h3>
+  
+  <!-- 時間ピッカー（既存のものをそのまま配置） -->
+  <div class="setting-group">
+    <label>制限時間</label>
+    <!-- 既存の .picker-container をここに配置 -->
+  </div>
 
-      <div class="setting-group">
-        <label for="setting-difficulty">難易度</label>
-        <select id="setting-difficulty">
-          <option value="all">すべて</option>
-          <option value="1">難易度 1（かんたん）</option>
-          <option value="2">難易度 2（ふつう）</option>
-          <option value="3">難易度 3（むずかしい）</option>
-          <option value="4">難易度 4（激きも）</option>
-        </select>
-      </div>
-
-      <button class="btn modal-btn" id="btn-close-settings">保存して閉じる</button>
+  <!-- 4. 難易度の複数選択（チェックボックス化） -->
+  <div class="setting-group">
+    <label>難易度（複数選択可）</label>
+    <div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-top: 5px;">
+      <label style="font-size:0.85rem;"><input type="checkbox" name="difficulty-chk" value="1" checked> 1</label>
+      <label style="font-size:0.85rem;"><input type="checkbox" name="difficulty-chk" value="2" checked> 2</label>
+      <label style="font-size:0.85rem;"><input type="checkbox" name="difficulty-chk" value="3" checked> 3</label>
+      <label style="font-size:0.85rem;"><input type="checkbox" name="difficulty-chk" value="4" checked> 4</label>
     </div>
   </div>
+
+  <!-- 2. 振る制御のON/OFF（ラジオボタン） -->
+  <div class="setting-group">
+    <label>デバイスを振って操作</label>
+    <div style="margin-top: 5px;">
+      <label style="font-size:0.85rem; margin-right: 15px;"><input type="radio" name="shake-gyro" value="true"> 有効</label>
+      <label style="font-size:0.85rem;"><input type="radio" name="shake-gyro" value="false" checked> 無効</label>
+    </div>
+  </div>
+
+  <!-- 5. パス制限（数値入力と無制限チェック） -->
+  <div class="setting-group">
+    <label>パス上限回数</label>
+    <div style="display: flex; justify-content: center; align-items: center; gap: 10px; margin-top: 5px;">
+      <input type="number" id="setting-pass-limit" value="5" min="0" style="width: 60px; text-align: center; border-radius: 4px; border: none; padding: 4px;" disabled>
+      <label style="font-size:0.85rem;"><input type="checkbox" id="setting-pass-infinite" checked> 無制限</label>
+    </div>
+  </div>
+
+  <button id="btn-close-settings" class="btn modal-btn">保存して閉じる</button>
+</div>
 
   <!-- モーダル2: ルール説明モーダル -->
   <div class="modal-overlay" id="rule-modal">

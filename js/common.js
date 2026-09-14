@@ -1,5 +1,5 @@
 // ===================================================
-// 💡 【追加】PWA・スマホでの横画面（ランドスケープ）強制ロック
+// 💡 PWA・スマホでの横画面（ランドスケープ）強制ロック
 // ===================================================
 function lockLandscape() {
   if (screen.orientation && typeof screen.orientation.lock === 'function') {
@@ -16,12 +16,14 @@ window.addEventListener('focus', lockLandscape);
 window.addEventListener('click', lockLandscape, { once: true });
 
 // ===================================================
-// グローバルアプリ状態
+// グローバルアプリ状態（機能拡張）
 // ===================================================
 const appState = {
   settings: {
     timeLimitSec: 60,
-    difficulty: "all"
+    difficulties: ["1", "2", "3", "4"], // 4. 複数保持に対応
+    isShakeEnabled: false,              // 2. デフォルトは無効
+    passLimit: "infinite"               // 5. デフォルトは無限
   },
   selectedCategory: "all",
   currentGameWords: [],
@@ -29,7 +31,9 @@ const appState = {
   timerInterval: null,
   timeLeftSec: 0,
   isPaused: false,
-  activeGame: null // 'gesture' | 'taboo' | null
+  activeGame: null,
+  remainingPasses: Infinity,            // 5. 現在の残りパス数
+  lastActiveWord: ''                    // 1. 最後に出題されていたお題
 };
 
 // DOM要素
@@ -52,7 +56,6 @@ const ITEM_HEIGHT = 32;
 // 画面切り替え & 基本遷移ナビゲーション
 // ===================================================
 function showScreen(screenElement) {
-  // 文字列（ID）で渡された場合の互換対応
   if (typeof screenElement === 'string') {
     screenElement = document.getElementById(screenElement);
   }
@@ -88,17 +91,14 @@ document.getElementById('btn-to-taboo-setup').addEventListener('click', () => {
   appState.activeGame = 'taboo';
   showScreen(tabooSetupScreen);
 });
-
 // ===================================================
-// 単語フィルタ ＆ シャッフル処理
+// 4. 単語フィルタ ＆ シャッフル処理（複数難易度対応）
 // ===================================================
 function prepareWords() {
-  // masterWords が読み込まれる前にボタンが押されてもクラッシュしない安全策
   const wordsData = window.masterWords || (typeof masterWords !== 'undefined' ? masterWords : null);
 
   if (!wordsData) {
     console.error("お題データ（masterWords）がまだ読み込まれていないか、定義されていません。");
-    // 安全策として画面が止まらないよう一時的なデータを入れます
     appState.currentGameWords = [{ text: "データ読み込みエラー", difficulty: 1, category1: "all" }];
     appState.currentWordIndex = 0;
     return;
@@ -106,13 +106,12 @@ function prepareWords() {
 
   let filtered = wordsData;
   
-  // 1. 難易度で絞り込み
-  if (appState.settings.difficulty !== 'all') {
-    const diff = Number(appState.settings.difficulty);
-    filtered = filtered.filter(w => w.difficulty === diff || w.difficulty === appState.settings.difficulty);
+  // 4. チェックされた複数の難易度（配列に含まれるか）で絞り込み
+  if (appState.settings.difficulties.length > 0) {
+    filtered = filtered.filter(w => appState.settings.difficulties.includes(String(w.difficulty)));
   }
   
-  // 2. カテゴリで絞り込み
+  // カテゴリで絞り込み
   if (appState.selectedCategory && appState.selectedCategory !== 'all') {
     const cat = appState.selectedCategory;
     filtered = filtered.filter(w => 
@@ -135,6 +134,7 @@ function prepareWords() {
     [appState.currentGameWords[i], appState.currentGameWords[j]] = [appState.currentGameWords[j], appState.currentGameWords[i]];
   }
   appState.currentWordIndex = 0;
+  appState.lastActiveWord = ''; // リセット
 }
 
 function getNextWordText() {
@@ -143,52 +143,9 @@ function getNextWordText() {
   }
   const wordObj = appState.currentGameWords[appState.currentWordIndex];
   appState.currentWordIndex++;
-  return wordObj.text;
-}
-
-// ===================================================
-// 単語フィルタ ＆ シャッフル処理
-// ===================================================
-function prepareWords() {
-  let filtered = masterWords;
   
-  // 1. 難易度で絞り込み
-  if (appState.settings.difficulty !== 'all') {
-    const diff = Number(appState.settings.difficulty);
-    filtered = filtered.filter(w => w.difficulty === diff || w.difficulty === appState.settings.difficulty);
-  }
-  
-  // 2. カテゴリで絞り込み
-  if (appState.selectedCategory && appState.selectedCategory !== 'all') {
-    const cat = appState.selectedCategory;
-    filtered = filtered.filter(w => 
-      w.category1 === cat || 
-      w.category2 === cat || 
-      w.category3 === cat
-    );
-  }
-
-  // 該当なしの安全策
-  if (filtered.length === 0) {
-    console.warn("条件に一致する単語が見つからなかったため、全単語を使用します。");
-    filtered = masterWords;
-  }
-
-  // 3. シャッフル
-  appState.currentGameWords = [...filtered];
-  for (let i = appState.currentGameWords.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [appState.currentGameWords[i], appState.currentGameWords[j]] = [appState.currentGameWords[j], appState.currentGameWords[i]];
-  }
-  appState.currentWordIndex = 0;
-}
-
-function getNextWordText() {
-  if (appState.currentWordIndex >= appState.currentGameWords.length) {
-    return null;
-  }
-  const wordObj = appState.currentGameWords[appState.currentWordIndex];
-  appState.currentWordIndex++;
+  // 1. 現在アクティブなお題として保持
+  appState.lastActiveWord = wordObj.text; 
   return wordObj.text;
 }
 
@@ -235,14 +192,16 @@ function stopCommonGame() {
 }
 
 // ===================================================
-// 加速度センサー制御（スマホを振る動きで判定）
+// 2. 加速度センサー制御（有り無し設定の適用）
 // ===================================================
 let isMotionCoolTime = false;
 
 async function startGyroGame(onAction) {
-  stopGyroGame(); // 既存のイベントがあれば解除
+  stopGyroGame();
 
-  // iOS 13+ のパーミッション要求対応（加速度も同じ許可が必要です）
+  // 2. 設定で「振る制御」がOFFならセンサーイベントを登録しない
+  if (!appState.settings.isShakeEnabled) return false;
+
   if (typeof DeviceMotionEvent !== 'undefined' &&
       typeof DeviceMotionEvent.requestPermission === 'function') {
     try {
@@ -255,7 +214,6 @@ async function startGyroGame(onAction) {
       console.error("モーション取得スキップ:", e);
     }
   } else if (window.DeviceMotionEvent) {
-    // Android や対応ブラウザ
     window._currentMotionHandler = (event) => handleCommonMotion(event, onAction);
     window.addEventListener('devicemotion', window._currentMotionHandler);
   }
@@ -263,7 +221,6 @@ async function startGyroGame(onAction) {
   return true;
 }
 
-// センサー停止処理（名前は既存のままで中身をモーション用に変更）
 function stopGyroGame() {
   if (window._currentMotionHandler) {
     window.removeEventListener('devicemotion', window._currentMotionHandler);
@@ -272,59 +229,46 @@ function stopGyroGame() {
   isMotionCoolTime = false;
 }
 
-// 振る動きを判定するメイン関数
 function handleCommonMotion(event, onAction) {
   if (isMotionCoolTime || appState.isPaused || appState.timeLeftSec <= 0) return;
 
-  // 重力加速度を除いた純粋な動きの加速を取得
   const accel = event.acceleration;
   if (!accel || accel.x === null || accel.y === null || accel.z === null) return;
 
-  // 1. 画面を前に向けた状態からの「地面向き・空向き」の振りは、すべてZ軸（画面の裏表方向）に現れます
   let zAcceleration = accel.z;
-
-  // 2. 【横振りガード】画面の向きを変えずに、右や左に並行に振った時のブレ（X軸・Y軸）を計測
   const xAcceleration = accel.x;
   const yAcceleration = accel.y;
 
-  // 左右や上下の並行なブレが強い（ここでは加速度 5 以上）時は、横振りとみなして一切反応させない
   const maxHorizontalTolerance = 5; 
   if (Math.abs(xAcceleration) > maxHorizontalTolerance || Math.abs(yAcceleration) > maxHorizontalTolerance) {
-    return; // 横振りを検知したら、この瞬間の処理を完全にカット
+    return; 
   }
 
-  // 💡 あなたが設定したそれぞれの感度（閾値）
-  const thresholdCorrect = 6; // 正解：しっかり画面を地面に向けて振る
-  const thresholdPass = 6;    // パス：しっかり画面を空に向けて振る
+  const thresholdCorrect = 6; 
+  const thresholdPass = 6;    
 
-  // 画面が地面を向くように振る ➔ 正解（どちらのゲームでも共通）
   if (zAcceleration < -thresholdCorrect) {
     triggerMotionAction('correct', onAction);
-  } 
-  // 画面が空を向くように振る ➔ パス（どちらのゲームでも共通）
-  else if (zAcceleration > thresholdPass) {
+  } else if (zAcceleration > thresholdPass) {
     triggerMotionAction('pass', onAction);
   }
 }
 
-// アクションを実行し、連続反応を防ぐクールダウンを挟む
 function triggerMotionAction(action, onAction) {
   isMotionCoolTime = true;
 
   if (navigator.vibrate) {
-    navigator.vibrate(200); // 振った瞬間にブルッとバイブ
+    navigator.vibrate(200); 
   }
 
   if (typeof onAction === 'function') {
     onAction(action);
   }
 
-  // 1回振った後、連続で誤反応しないように入力を受け付けない（400ms）
   setTimeout(() => {
     isMotionCoolTime = false;
   }, 400);
 }
-
 // ===================================================
 // UI イベント（カテゴリカード & モーダル制御）
 // ===================================================
@@ -336,15 +280,31 @@ document.querySelectorAll('.category-card').forEach(card => {
   });
 });
 
-// モーダル一括制御 (環境設定)
+// 環境設定を開いたとき
 document.querySelectorAll('.btn-open-settings').forEach(btn => {
   btn.addEventListener('click', () => {
     appState.isPaused = true;
     
-    // 現在の難易度設定をセレクトボックスに反映
-    const difficultySelect = document.getElementById('setting-difficulty');
-    if (difficultySelect) {
-      difficultySelect.value = appState.settings.difficulty;
+    // 4. 難易度のチェック状態反映
+    document.querySelectorAll('input[name="difficulty-chk"]').forEach(chk => {
+      chk.checked = appState.settings.difficulties.includes(chk.value);
+    });
+
+    // 2. 振る制御のラジオボタン反映
+    const shakeRadio = document.querySelector(`input[name="shake-gyro"][value="${appState.settings.isShakeEnabled}"]`);
+    if (shakeRadio) shakeRadio.checked = true;
+
+    // 5. パス制限の反映
+    const passInfiniteChk = document.getElementById('setting-pass-infinite');
+    const passLimitInput = document.getElementById('setting-pass-limit');
+    if (appState.settings.passLimit === "infinite") {
+      passInfiniteChk.checked = true;
+      passLimitInput.disabled = true;
+      passLimitInput.value = 5;
+    } else {
+      passInfiniteChk.checked = false;
+      passLimitInput.disabled = false;
+      passLimitInput.value = appState.settings.passLimit;
     }
 
     settingsModal.classList.add('active');
@@ -352,13 +312,33 @@ document.querySelectorAll('.btn-open-settings').forEach(btn => {
   });
 });
 
+// パス設定変更時の即時UI連動（無制限チェックで数値入力を無効化）
+document.getElementById('setting-pass-infinite')?.addEventListener('change', (e) => {
+  document.getElementById('setting-pass-limit').disabled = e.target.checked;
+});
+
+// 環境設定を閉じるとき（保存処理）
 document.getElementById('btn-close-settings').addEventListener('click', () => {
   appState.settings.timeLimitSec = getPickerValueSeconds();
   
-  // 選択された難易度を設定に保存
-  const difficultySelect = document.getElementById('setting-difficulty');
-  if (difficultySelect) {
-    appState.settings.difficulty = difficultySelect.value;
+  // 4. 難易度の保存
+  const selectedDiffs = [];
+  document.querySelectorAll('input[name="difficulty-chk"]:checked').forEach(chk => {
+    selectedDiffs.push(chk.value);
+  });
+  appState.settings.difficulties = selectedDiffs.length > 0 ? selectedDiffs : ["1", "2", "3", "4"]; // 空なら全選択
+
+  // 2. 振る制御の保存
+  const shakeVal = document.querySelector('input[name="shake-gyro"]:checked')?.value;
+  appState.settings.isShakeEnabled = (shakeVal === "true");
+
+  // 5. パス制限の保存
+  const isInfinite = document.getElementById('setting-pass-infinite').checked;
+  if (isInfinite) {
+    appState.settings.passLimit = "infinite";
+  } else {
+    const val = parseInt(document.getElementById('setting-pass-limit').value, 10);
+    appState.settings.passLimit = isNaN(val) || val < 0 ? 0 : val;
   }
   
   settingsModal.classList.remove('active');
@@ -379,7 +359,7 @@ document.querySelectorAll('.btn-open-rule').forEach(btn => {
           <li>スマホを横向きにして<strong>おでこに当てて</strong>画面を説明者に見せます。</li>
           <li>周りの人は画面に映ったお題をジェスチャーや言葉でヒントを出します。</li>
           <li>正解したらスマホ画面を<strong>「下（おじぎ）」</strong>に倒す。</li>
-          <li>もしくは、スマホ画面を<strong>「ダブルタップ」</strong>します。</li>
+          <li>もしくは、スマホ画面を<strong>「ダブルタップ」</strong>するか<strong>「下にフリック」</strong>します。</li>
           <li>パスしたい時はスマホ画面を<strong>「上（天井）」</strong>に向ける。</li>
           <li>もしくは、スマホ画面の単語を<strong>「上にフリック」</strong>します。</li>
         </ol>
@@ -391,7 +371,7 @@ document.querySelectorAll('.btn-open-rule').forEach(btn => {
           <li>説明者は画面に表示されたお題を確認します。</li>
           <li><strong>カタカナ語（外来語・和製英語）を一切使わずに</strong>お題を説明してください。</li>
           <li>正解したらスマホ画面を<strong>「下（おじぎ）」</strong>に倒す。</li>
-          <li>もしくは、スマホ画面を<strong>「ダブルタップ」</strong>します。</li>
+          <li>もしくは、スマホ画面を<strong>「ダブルタップ」</strong>するか<strong>「下にフリック」</strong>します。</li>
           <li>パスしたい時はスマホ画面を<strong>「上（天井）」</strong>に向ける。</li>
           <li>もしくは、スマホ画面の単語を<strong>「上にフリック」</strong>します。</li>
           <li>うっかりカタカナ語を言ってしまうとペナルティ！</li>
@@ -442,32 +422,19 @@ function getPickerValueSeconds() {
 }
 
 // ==================================================
-// 共通リザルト（結果履歴）管理
+// 1. 共通リザルト管理（未解答/最後のお題の表示対応）
 // ==================================================
-
-// そのラウンドの履歴を保持する配列
 let gameHistory = [];
 
-/**
- * ゲーム開始時に履歴をリセットする関数
- */
 function resetGameHistory() {
   gameHistory = [];
 }
 
-/**
- * 解答結果（正解／パス）を履歴に追加する関数
- * @param {string} word - 出題された単語
- * @param {string} result - 'correct' または 'pass'
- */
 function recordGameResult(word, result) {
   if (!word) return;
   gameHistory.push({ word: word, result: result });
 }
 
-/**
- * タイムアップ時にリザルトモーダルを生成して表示する関数
- */
 function showResultModal() {
   const resultModal = document.getElementById('result-modal');
   const resultListEl = document.getElementById('result-list');
@@ -475,29 +442,45 @@ function showResultModal() {
 
   if (!resultModal || !resultListEl || !resultSummaryEl) return;
 
-  // 正解数とパス数を集計
   const correctCount = gameHistory.filter(item => item.result === 'correct').length;
   const passCount = gameHistory.filter(item => item.result === 'pass').length;
 
-  // 集計結果のテキスト
   resultSummaryEl.innerHTML = `正解: <span style="color:#2ecc71;">${correctCount}</span> / パス: <span style="color:#e74c3c;">${passCount}</span>`;
 
-  // 一覧リストの生成（単語 ｜ 正解・パス の形式）
+  // 1. 履歴配列に存在する単語のテキストリストを作成
+  const answeredWords = gameHistory.map(item => item.word);
+
+  // 1. 最後に出題されていたお題がまだ解答履歴にない場合、履歴末尾に「時間切れ」として追加
+  if (appState.lastActiveWord && !answeredWords.includes(appState.lastActiveWord)) {
+    gameHistory.push({ word: appState.lastActiveWord, result: 'unanswered' });
+  }
+
   if (gameHistory.length === 0) {
     resultListEl.innerHTML = `<div style="text-align:center; padding: 10px; opacity:0.7;">回答データがありません</div>`;
   } else {
-    resultListEl.innerHTML = gameHistory.map(item => `
-      <div class="result-item">
-        <span class="word-name">${item.word}</span>
-        <span class="result-divider">｜</span>
-        <span class="result-badge ${item.result}">
-          ${item.result === 'correct' ? '正解' : 'パス'}
-        </span>
-      </div>
-    `).join('');
+    resultListEl.innerHTML = gameHistory.map(item => {
+      let badgeText = '正解';
+      let badgeClass = 'correct';
+      if (item.result === 'pass') {
+        badgeText = 'パス';
+        badgeClass = 'pass';
+      } else if (item.result === 'unanswered') {
+        badgeText = '時間切れ';
+        badgeClass = 'unanswered';
+      }
+
+      return `
+        <div class="result-item" style="${item.result === 'unanswered' ? 'opacity: 0.65; background: rgba(255,255,255,0.05);' : ''}">
+          <span class="word-name">${item.word}</span>
+          <span class="result-divider">｜</span>
+          <span class="result-badge ${badgeClass}">
+            ${badgeText}
+          </span>
+        </div>
+      `;
+    }).join('');
   }
 
-  // モーダルを表示
   resultModal.classList.add('active');
 }
 
@@ -506,21 +489,16 @@ document.addEventListener('DOMContentLoaded', () => {
   initPickers();
 
   const resultModal = document.getElementById('result-modal');
-
-  // モーダル非表示用共通処理
   const hideResultModal = () => {
     if (resultModal) {
       resultModal.classList.remove('active');
     }
   };
 
-  // 1. 同じお題でもう一度プレイ
   const btnRetry = document.getElementById('btn-result-retry');
   if (btnRetry) {
     btnRetry.addEventListener('click', () => {
       hideResultModal();
-
-      // 現在のアクティブゲーム判定に合わせて各スタートボタンをトリガー
       if (appState.activeGame === 'gesture' || document.body.classList.contains('theme-gesture')) {
         document.getElementById('btn-gesture-start')?.click();
       } else if (appState.activeGame === 'taboo' || document.body.classList.contains('theme-taboo')) {
@@ -529,12 +507,10 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // 2. お題を変更する（カテゴリ選択画面に戻る）
   const btnChangeSetup = document.getElementById('btn-result-change-setup');
   if (btnChangeSetup) {
     btnChangeSetup.addEventListener('click', () => {
       hideResultModal();
-
       if (appState.activeGame === 'gesture' || document.body.classList.contains('theme-gesture')) {
         showScreen(gestureSetupScreen);
       } else if (appState.activeGame === 'taboo' || document.body.classList.contains('theme-taboo')) {
@@ -545,13 +521,10 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // 3. タイトルに戻る
   const btnToTitle = document.getElementById('btn-result-to-title');
   if (btnToTitle) {
     btnToTitle.addEventListener('click', () => {
       hideResultModal();
-
-      // テーマ用クラスを除去してメニューへ
       document.body.classList.remove('theme-gesture', 'theme-taboo');
       appState.activeGame = null;
       showScreen(menuScreen);
@@ -560,50 +533,67 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // ===================================================
-// 【追加】タッチ操作制御（ダブルタップで正解 / 上フリックでパス）
+// 3. タッチ操作制御（ダブルタップ正解 / 上フリックパス / 下フリック正解）
 // ===================================================
-/**
- * 画面へのタッチ操作（ダブルタップ・上フリック）を監視・制御する関数
- * @param {HTMLElement} screenElement - 監視対象の画面要素 (gestureScreen や tabooScreen)
- * @param {function} onAction - アクション実行時のコールバック関数
- */
 function startTouchGame(screenElement, onAction) {
   if (!screenElement || typeof onAction !== 'function') return;
 
-  // 既存のリスナーと重複しないよう、一度クリアするための参照保持
   stopTouchGame(screenElement);
 
   let lastTapTime = 0;
+  let touchStartX = 0;
   let touchStartY = 0;
 
-  // タッチ開始時の座標を記録
   screenElement._touchStartHandler = (e) => {
     if (appState.isPaused || appState.timeLeftSec <= 0) return;
-    touchStartY = e.touches[0].clientY;
+    // 💡 最初のタッチ位置の座標を確実に取得
+    if (e.touches && e.touches.length > 0) {
+      touchStartX = e.touches[0].clientX;
+      touchStartY = e.touches[0].clientY;
+    }
   };
 
-  // タッチ終了時にダブルタップとフリックを判定
   screenElement._touchEndHandler = (e) => {
     if (appState.isPaused || appState.timeLeftSec <= 0) return;
 
     const currentTime = new Date().getTime();
-    const touchEndY = e.changedTouches[0].clientY;
-    const diffY = touchStartY - touchEndY; // 上方向への移動量
+    let touchEndX = touchStartX;
+    let touchEndY = touchStartY;
 
-    // 1. 【上フリック判定】
-    // 上方向に50px以上素早く動かされたら「パス」とみなす
-    if (diffY > 50) {
-      if (navigator.vibrate) navigator.vibrate(100);
-      onAction('pass');
-      return; // フリックが成立したらダブルタップ判定はスキップ
+    // 💡 指が離れた瞬間の座標を確実に取得
+    if (e.changedTouches && e.changedTouches.length > 0) {
+      touchEndX = e.changedTouches[0].clientX;
+      touchEndY = e.changedTouches[0].clientY;
+    }
+    
+    const diffX = touchStartX - touchEndX;
+    const diffY = touchStartY - touchEndY; 
+
+    // フリックの誤判定を防ぐため、横方向のブレが少ないときだけ縦フリックを検出
+    if (Math.abs(diffX) < 40) {
+      // 上フリック (元々の仕様：パス)
+      if (diffY > 50) {
+        // 5. パス制限チェック（残数が0ならフリックを受け付けない）
+        if (appState.settings.passLimit !== "infinite" && appState.remainingPasses <= 0) {
+          return; 
+        }
+        if (navigator.vibrate) navigator.vibrate(100);
+        onAction('pass');
+        return;
+      }
+      // 3. 下フリックの追加 (仕様追加：正解)
+      if (diffY < -50) {
+        if (navigator.vibrate) navigator.vibrate(200);
+        onAction('correct');
+        return;
+      }
     }
 
-    // 2. 【ダブルタップ判定】
-    // 300ミリ秒以内に再度タップされたら「正解」とみなす
+    // ダブルタップ (正解)
     if ((currentTime - lastTapTime) < 300) {
       if (navigator.vibrate) navigator.vibrate(200);
       onAction('correct');
-      lastTapTime = 0; // 連続発火防止のためにリセット
+      lastTapTime = 0;
     } else {
       lastTapTime = currentTime;
     }
@@ -613,9 +603,6 @@ function startTouchGame(screenElement, onAction) {
   screenElement.addEventListener('touchend', screenElement._touchEndHandler, { passive: true });
 }
 
-/**
- * タッチ操作の監視を解除する関数
- */
 function stopTouchGame(screenElement) {
   if (!screenElement) return;
   if (screenElement._touchStartHandler) {
@@ -628,7 +615,7 @@ function stopTouchGame(screenElement) {
   }
 }
 
-// 既存の stopCommonGame にタッチ停止処理を組み込む
+// stopCommonGame の拡張
 const originalStopCommonGame = stopCommonGame;
 stopCommonGame = function() {
   originalStopCommonGame();
@@ -637,34 +624,16 @@ stopCommonGame = function() {
 };
 
 // ===================================================
-// 💡 【修正】PWA・スマホでの横画面強制 ＆ 回転時のズレ完全リセット
+// PWA・スマホでの横画面強制 ＆ 回転時のズレ完全リセット
 // ===================================================
-function lockLandscape() {
-  if (screen.orientation && typeof screen.orientation.lock === 'function') {
-    screen.orientation.lock('landscape').catch((err) => {
-      console.log("画面ロックは拒否されました:", err);
-    });
-  }
-}
-
-/**
- * 💡 一度縦に持ち替えて、横に戻した時の描画バグを完全にリセットする関数
- */
 function resetLayoutOnResize() {
-  // 横画面（ランドスケープ）のときだけ実行
   if (window.innerWidth > window.innerHeight) {
-    // 画面全体の高さを強制的に再計算させる
     document.body.style.height = '100dvh';
-    
-    // 💡 iPhoneのセーフエリア計算バグを強制リフレッシュする魔法の処理
-    // ほんの一瞬（0.01秒）だけ画面を1ピクセル動かすことで、ブラウザに「正しい横画面の余白」を再計算させます
     window.scrollTo(0, 0);
     
-    // 現在アクティブな画面（表示中のスクリーン）があれば、強制的に再描画イベントを走らせる
     const activeScreen = document.querySelector('.screen.active');
     if (activeScreen) {
       activeScreen.style.display = 'none';
-      // 10ミリ秒後に再表示してCSSを強制リロード
       setTimeout(() => {
         activeScreen.style.display = 'flex';
       }, 10);
@@ -672,13 +641,7 @@ function resetLayoutOnResize() {
   }
 }
 
-// アプリ起動時や復帰時に横画面を強制
-window.addEventListener('DOMContentLoaded', lockLandscape);
-window.addEventListener('focus', lockLandscape);
-window.addEventListener('click', lockLandscape, { once: true });
-
-// 💡 【重要】画面のサイズ変更（回転）が発生した瞬間をキャッチしてズレを直す
 window.addEventListener('resize', resetLayoutOnResize);
 window.addEventListener('orientationchange', () => {
-  setTimeout(resetLayoutOnResize, 200); // 回転アニメーションが終わるのを少し待ってから実行
+  setTimeout(resetLayoutOnResize, 200); 
 });

@@ -673,6 +673,12 @@ body.theme-taboo .timer-bar {
   background-color: var(--bg-pass);
 }
 
+/* 1. 時間切れ用リザルトバッジのスタイル */
+.result-badge.unanswered {
+  background-color: #7f8c8d; /* シックなグレー */
+}
+
+
 .result-actions {
   display: flex;
   flex-direction: row;
