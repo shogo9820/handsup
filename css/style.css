@@ -697,3 +697,45 @@ body.theme-taboo .timer-bar {
   white-space: nowrap;
   margin-bottom: 0 !important;
 }
+
+/* ==================================================
+   時間切れ間近の画面外周パルス発光演出
+   ================================================== */
+
+/* 擬似要素を使って、画面の最前面のキワだけに発光エフェクトを重ねます */
+body::before {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none; /* タップの邪魔をしない */
+  z-index: 999999;      /* タイムバーよりも前面に */
+  box-shadow: inset 0 0 0px transparent;
+  transition: box-shadow 0.5s ease;
+}
+
+/* 段階2：警告（残り50%以下）- 黄色・オレンジ系でゆっくり脈打つ */
+body.warning::before {
+  animation: pulse-warning 2.0s infinite ease-in-out;
+}
+
+/* 段階3：危機（残り20%以下）- 赤色で激しくドクンドクンと脈打つ */
+body.danger::before {
+  animation: pulse-danger 0.8s infinite ease-in-out;
+}
+
+/* 警告時のアニメーションキーフレーム */
+@keyframes pulse-warning {
+  0%   { box-shadow: inset 0 0 15px rgba(255, 234, 0, 0.0); }
+  50%  { box-shadow: inset 0 0 35px rgba(255, 215, 0, 0.4); }
+  100% { box-shadow: inset 0 0 15px rgba(255, 234, 0, 0.0); }
+}
+
+/* 危機時のアニメーションキーフレーム（キワをより深く染める） */
+@keyframes pulse-danger {
+  0%   { box-shadow: inset 0 0 20px rgba(255, 23, 68, 0.1); }
+  50%  { box-shadow: inset 0 0 55px rgba(255, 23, 68, 0.7); }
+  100% { box-shadow: inset 0 0 20px rgba(255, 23, 68, 0.1); }
+}

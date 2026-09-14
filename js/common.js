@@ -161,6 +161,8 @@ function startTimerBar(barElement, onTimeUp) {
 
   barElement.style.width = '100%';
   barElement.classList.remove('warning', 'danger');
+  // 💡 ゲーム開始時にbodyの演出クラスも綺麗にリセット
+  document.body.classList.remove('warning', 'danger');
 
   appState.timerInterval = setInterval(() => {
     if (appState.isPaused) return;
@@ -171,16 +173,26 @@ function startTimerBar(barElement, onTimeUp) {
     const progress = (remainingMs / (totalSec * 1000)) * 100;
     barElement.style.width = `${Math.max(0, progress)}%`;
 
+    // 💡 残り20%以下（段階3：危機）
     if (progress <= 20) {
       barElement.classList.add('danger');
       barElement.classList.remove('warning');
+      
+      document.body.classList.add('danger');    /* body外周を赤くパルス発光 */
+      document.body.classList.remove('warning');
+      
+    // 💡 残り50%以下（段階2：警告）
     } else if (progress <= 50) {
       barElement.classList.add('warning');
+      
+      document.body.classList.add('warning');   /* body外周を黄色くゆっくり発光 */
     }
 
     if (remainingMs <= 0) {
       clearInterval(appState.timerInterval);
       barElement.style.width = '0%';
+      // 💡 タイムアップしたら演出クラスを即座に除去
+      document.body.classList.remove('warning', 'danger');
       onTimeUp();
     }
   }, 50);
@@ -189,6 +201,8 @@ function startTimerBar(barElement, onTimeUp) {
 function stopCommonGame() {
   clearInterval(appState.timerInterval);
   appState.isPaused = false;
+  // 💡 ゲーム中断・終了時にも画面外周のパルス演出クラスを完全に消去
+  document.body.classList.remove('warning', 'danger');
   stopGyroGame();
 }
 
