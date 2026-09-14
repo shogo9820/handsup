@@ -660,3 +660,84 @@ window.addEventListener('resize', resetLayoutOnResize);
 window.addEventListener('orientationchange', () => {
   setTimeout(resetLayoutOnResize, 200); 
 });
+
+// ===================================================
+// 効果音（SE）生成・再生システム（Web Audio API方式）
+// ===================================================
+let audioCtx = null;
+
+// スマホブラウザの音声制限を解除する関数（ゲーム開始時に実行）
+function initAudio() {
+  if (!audioCtx) {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  }
+  if (audioCtx.state === 'suspended') {
+    audioCtx.resume();
+  }
+}
+
+// 効果音再生メイン関数
+function playSE(type) {
+  if (!audioCtx) return;
+  
+  // オーディオコンテキストが停止していたら復活させる安全策
+  if (audioCtx.state === 'suspended') {
+    audioCtx.resume();
+  }
+
+  const now = audioCtx.currentTime;
+
+  if (type === 'correct') {
+    // 🔔 正解音：「ピコーン！」（滑らかに跳ね上がる2ステップ電子音）
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    
+    osc.type = 'sine'; // 透き通ったサイン波
+    
+    // 音程の動き：523Hz(ド)から一瞬で1046Hz(高いド)へジャンプ
+    osc.frequency.setValueAtTime(523, now);
+    osc.frequency.setValueAtTime(1046, now + 0.08);
+    
+    // 音量の動き：パッと鳴って、0.25秒で綺麗に消える
+    gain.gain.setValueAtTime(0.3, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
+    
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    
+    osc.start(now);
+    osc.stop(now + 0.25);
+
+  } else if (type === 'pass') {
+    // 💨 パス音：「シュッ！」（空気を切り裂いて投げ飛ばす風切り音）
+    // ホワイトノイズ（砂嵐）のバッファを生成して、リアルな摩擦音を作ります
+    const bufferSize = audioCtx.sampleRate * 0.15; // 0.15秒の長さ
+    const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < bufferSize; i++) {
+      data[i] = Math.random() * 2 - 1;
+    }
+
+    const noiseNode = audioCtx.createBufferSource();
+    noiseNode.buffer = buffer;
+
+    // フィルターをかけて「サーー」という高音を「シュッ」という風切り音に変換
+    const filter = audioCtx.createBiquadFilter();
+    filter.type = 'lowpass';
+    filter.frequency.setValueAtTime(1200, now);
+    filter.frequency.exponentialRampToValueAtTime(400, now + 0.15); // 投げる軌道に合わせて低音へ変化
+
+    const gain = audioCtx.createGain();
+    // 鋭く立ち上がって、お題が画面から消えるスピード感でフェードアウト
+    gain.gain.setValueAtTime(0.01, now);
+    gain.gain.linearRampToValueAtTime(0.6, now + 0.03); // パッと風を切る瞬間
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
+
+    noiseNode.connect(filter);
+    filter.connect(gain);
+    gain.connect(audioCtx.destination);
+
+    noiseNode.start(now);
+    noiseNode.stop(now + 0.15);
+  }
+}

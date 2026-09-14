@@ -4,6 +4,8 @@
 let currentTabooWordText = '';
 
 document.getElementById('btn-taboo-start').addEventListener('click', async () => {
+  initAudio(); // 💡 音声の初期化（追加）
+
   // 5. パス回数の初期設定（無限か指定回数か）
   if (appState.settings.passLimit === "infinite") {
     appState.maxPassLimit = Infinity; // 💡 上限値を記憶
@@ -66,6 +68,8 @@ function handleTabooAction(action) {
   if (!currentTabooWordText) return;
 
   if (action === 'correct') {
+    playSE('correct'); // 💡 正解音「ピコーン！」を鳴らす（追加）
+
     // 2. 正解履歴を記録（common.jsの関数）
     recordGameResult(currentTabooWordText, 'correct');
 
@@ -83,6 +87,8 @@ function handleTabooAction(action) {
       // パス上限に達している場合は、デバイスを振る/フリックされても処理をスキップ
       return; 
     }
+
+     playSE('pass'); // 💡 パス音「シュッ！」を鳴らす（追加）
     
     // パス可能な場合は回数を減算して画面表示を更新
     if (appState.settings.passLimit !== "infinite") {
