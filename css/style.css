@@ -699,10 +699,10 @@ body.theme-taboo .timer-bar {
 }
 
 /* ==================================================
-   時間切れ間近の画面外周パルス発光演出
+   時間切れ間近の画面外周パルス発光演出（パワーアップ版）
    ================================================== */
 
-/* 擬似要素を使って、画面の最前面のキワだけに発光エフェクトを重ねます */
+/* 擬似要素を使って、画面のキワから中央に向けて強力なグラデーション影を落とします */
 body::before {
   content: "";
   position: fixed;
@@ -711,31 +711,31 @@ body::before {
   right: 0;
   bottom: 0;
   pointer-events: none; /* タップの邪魔をしない */
-  z-index: 999999;      /* タイムバーよりも前面に */
+  z-index: 999999;      /* 最前面に */
   box-shadow: inset 0 0 0px transparent;
-  transition: box-shadow 0.5s ease;
+  transition: box-shadow 0.3s ease;
 }
 
-/* 段階2：警告（残り50%以下）- 黄色・オレンジ系でゆっくり脈打つ */
+/* 段階2：警告（残り50%以下）- 画面の1/4近くまで黄色い光がフワフワと侵入 */
 body.warning::before {
-  animation: pulse-warning 2.0s infinite ease-in-out;
+  animation: pulse-warning-strong 1.5s infinite ease-in-out;
 }
 
-/* 段階3：危機（残り20%以下）- 赤色で激しくドクンドクンと脈打つ */
+/* 段階3：危機（残り20%以下）- 画面の半分近くが真っ赤に染まり、激しくドクンドクンと明滅 */
 body.danger::before {
-  animation: pulse-danger 0.8s infinite ease-in-out;
+  animation: pulse-danger-strong 0.6s infinite ease-in-out;
 }
 
-/* 警告時のアニメーションキーフレーム */
-@keyframes pulse-warning {
-  0%   { box-shadow: inset 0 0 15px rgba(255, 234, 0, 0.0); }
-  50%  { box-shadow: inset 0 0 35px rgba(255, 215, 0, 0.4); }
-  100% { box-shadow: inset 0 0 15px rgba(255, 234, 0, 0.0); }
+/* 【強化版】警告時のアニメーション（発光範囲を 35px → 最大 80px に強化、テンポも少しアップ） */
+@keyframes pulse-warning-strong {
+  0%   { box-shadow: inset 0 0 20px rgba(255, 215, 0, 0.1); }
+  50%  { box-shadow: inset 0 0 80px rgba(255, 165, 0, 0.6); } /* より深く、濃いオレンジ寄りに */
+  100% { box-shadow: inset 0 0 20px rgba(255, 215, 0, 0.1); }
 }
 
-/* 危機時のアニメーションキーフレーム（キワをより深く染める） */
-@keyframes pulse-danger {
-  0%   { box-shadow: inset 0 0 20px rgba(255, 23, 68, 0.1); }
-  50%  { box-shadow: inset 0 0 55px rgba(255, 23, 68, 0.7); }
-  100% { box-shadow: inset 0 0 20px rgba(255, 23, 68, 0.1); }
+/* 【強化版】危機時のアニメーション（発光範囲を 55px → 最大 150px に超強化、脈打ちを高速化） */
+@keyframes pulse-danger-strong {
+  0%   { box-shadow: inset 0 0 30px rgba(255, 23, 68, 0.2); }
+  50%  { box-shadow: inset 0 0 150px rgba(255, 0, 0, 0.85); } /* 画面の左右から中央近くまで真っ赤に染める */
+  100% { box-shadow: inset 0 0 30px rgba(255, 23, 68, 0.2); }
 }
