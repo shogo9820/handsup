@@ -32,6 +32,7 @@ const appState = {
   timeLeftSec: 0,
   isPaused: false,
   activeGame: null,
+  maxPassLimit: Infinity,
   remainingPasses: Infinity,            // 5. 現在の残りパス数
   lastActiveWord: ''                    // 1. 最後に出題されていたお題
 };

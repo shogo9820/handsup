@@ -6,8 +6,10 @@ let currentTabooWordText = '';
 document.getElementById('btn-taboo-start').addEventListener('click', async () => {
   // 5. パス回数の初期設定（無限か指定回数か）
   if (appState.settings.passLimit === "infinite") {
+    appState.maxPassLimit = Infinity; // 💡 上限値を記憶
     appState.remainingPasses = Infinity;
   } else {
+    appState.maxPassLimit = appState.settings.passLimit; // 💡 上限値を記憶
     appState.remainingPasses = appState.settings.passLimit;
   }
   updatePassCountDisplay('taboo');
@@ -66,6 +68,12 @@ function handleTabooAction(action) {
   if (action === 'correct') {
     // 2. 正解履歴を記録（common.jsの関数）
     recordGameResult(currentTabooWordText, 'correct');
+
+    // 💡 正解が出たらパス回数をリセット（追加）
+    if (appState.settings.passLimit !== "infinite") {
+      appState.remainingPasses = appState.maxPassLimit;
+      updatePassCountDisplay('taboo');
+    }
 
     document.body.classList.add('correct');
     display.textContent = "正解！";
