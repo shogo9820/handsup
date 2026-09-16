@@ -223,260 +223,70 @@
     </div>
 
     <!-- ⚙ 環境設定モーダル（完全版：そのまま置き換え） -->
-    <div id="settings-modal" class="modal-overlay">
-      <div
-        class="modal-content"
-        style="
-          background: #34495e;
-          padding: 20px;
-          border-radius: 18px;
-          width: 90%;
-          max-width: 440px;
-          box-sizing: border-box;
-        "
-      >
-        <h3
-          class="modal-title"
-          style="margin-bottom: 15px; font-weight: bold; font-size: 1.3rem"
-        >
-          ⚙ 環境設定
-        </h3>
-
-        <!-- 1. 制限時間設定（ドラムピッカー用のコンテナ：既存のピッカー構造） -->
-        <div class="setting-group" style="margin-bottom: 15px">
-          <label
-            style="
-              display: block;
-              font-weight: bold;
-              margin-bottom: 6px;
-              font-size: 0.85rem;
-            "
-            >制限時間</label
-          >
-
-          <!-- あなたの元のコードにあるドラムピッカーのHTML構造です -->
-          <div
-            class="picker-container"
-            style="
-              position: relative;
-              display: flex;
-              justify-content: center;
-              align-items: center;
-              height: 90px;
-              background: #1e2b37;
-              border-radius: 12px;
-              overflow: hidden;
-              margin: 0 auto;
-              width: 100%;
-            "
-          >
+<div id="settings-modal" class="modal-overlay">
+  <div class="modal-content settings-landscape-content">
+    <h3 class="modal-title">⚙ 環境設定</h3>
+    
+    <!-- 💡 左右を分割するためのラッパーを新設 -->
+    <div class="settings-layout-wrapper">
+      
+      <!-- 【左側エリア】設定項目をコンパクトに凝縮 -->
+      <div class="settings-main-fields">
+        <!-- 制限時間 -->
+        <div class="setting-group compact-row">
+          <label>制限時間</label>
+          <!-- ピッカーコンテナ（既存の構造を維持） -->
+          <div class="picker-container">
             <div class="picker-highlight"></div>
-            <!-- 分ホイール -->
-            <div id="picker-min" class="picker-column">
-              <div id="wheel-min" class="picker-wheel"></div>
-            </div>
+            <div id="picker-min" class="picker-column"><div id="wheel-min" class="picker-wheel"></div></div>
             <span class="picker-unit">分</span>
-            <!-- 秒ホイール -->
-            <div id="picker-sec" class="picker-column">
-              <div id="wheel-sec" class="picker-wheel"></div>
-            </div>
+            <div id="picker-sec" class="picker-column"><div id="wheel-sec" class="picker-wheel"></div></div>
             <span class="picker-unit">秒</span>
           </div>
         </div>
 
-        <!-- 4. 難易度の複数選択（チェックボックス式） -->
-        <div class="setting-group" style="margin-bottom: 15px">
-          <label
-            style="
-              display: block;
-              font-weight: bold;
-              margin-bottom: 6px;
-              font-size: 0.85rem;
-            "
-            >難易度（複数選択可）</label
-          >
-          <div
-            style="
-              display: flex;
-              flex-wrap: wrap;
-              justify-content: center;
-              gap: 12px;
-              background: rgba(0, 0, 0, 0.2);
-              padding: 8px;
-              border-radius: 8px;
-            "
-          >
-            <label
-              style="
-                font-size: 0.9rem;
-                cursor: pointer;
-                display: flex;
-                align-items: center;
-                gap: 4px;
-              "
-            >
-              <input type="checkbox" name="difficulty-chk" value="1" /> 1
-            </label>
-            <label
-              style="
-                font-size: 0.9rem;
-                cursor: pointer;
-                display: flex;
-                align-items: center;
-                gap: 4px;
-              "
-            >
-              <input type="checkbox" name="difficulty-chk" value="2" /> 2
-            </label>
-            <label
-              style="
-                font-size: 0.9rem;
-                cursor: pointer;
-                display: flex;
-                align-items: center;
-                gap: 4px;
-              "
-            >
-              <input type="checkbox" name="difficulty-chk" value="3" /> 3
-            </label>
-            <label
-              style="
-                font-size: 0.9rem;
-                cursor: pointer;
-                display: flex;
-                align-items: center;
-                gap: 4px;
-              "
-            >
-              <input type="checkbox" name="difficulty-chk" value="4" /> 4
-            </label>
+        <!-- 難易度 -->
+        <div class="setting-group compact-row">
+          <label>難易度</label>
+          <div class="difficulty-checkbox-grid">
+            <label class="panel-check-label"><input type="checkbox" name="difficulty-chk" value="1"> 1</label>
+            <label class="panel-check-label"><input type="checkbox" name="difficulty-chk" value="2"> 2</label>
+            <label class="panel-check-label"><input type="checkbox" name="difficulty-chk" value="3"> 3</label>
+            <label class="panel-check-label"><input type="checkbox" name="difficulty-chk" value="4"> 4</label>
           </div>
         </div>
 
-        <!-- 2. 振る制御のON/OFF（ラジオボタン式） -->
-        <div class="setting-group" style="margin-bottom: 15px">
-          <label
-            style="
-              display: block;
-              font-weight: bold;
-              margin-bottom: 6px;
-              font-size: 0.85rem;
-            "
-            >デバイスを振って操作（お辞儀/天井）</label
-          >
-          <div
-            style="
-              display: flex;
-              justify-content: center;
-              gap: 20px;
-              background: rgba(0, 0, 0, 0.2);
-              padding: 8px;
-              border-radius: 8px;
-            "
-          >
-            <label
-              style="
-                font-size: 0.9rem;
-                cursor: pointer;
-                display: flex;
-                align-items: center;
-                gap: 4px;
-              "
-            >
-              <input type="radio" name="shake-gyro" value="true" /> 有効
-            </label>
-            <label
-              style="
-                font-size: 0.9rem;
-                cursor: pointer;
-                display: flex;
-                align-items: center;
-                gap: 4px;
-              "
-            >
-              <input type="radio" name="shake-gyro" value="false" /> 無効
-            </label>
+        <!-- 操作方法（デバイスを振る） -->
+        <div class="setting-group compact-row">
+          <label>デバイスを振って操作</label>
+          <div class="segmented-control">
+            <label class="segment-item"><input type="radio" name="shake-gyro" value="true"><span>有効</span></label>
+            <label class="segment-item"><input type="radio" name="shake-gyro" value="false"><span>無効</span></label>
           </div>
         </div>
 
-        <!-- 5. パス制限（数値入力 ＆ 無制限チェックボックス） -->
-        <div class="setting-group" style="margin-bottom: 20px">
-          <label
-            style="
-              display: block;
-              font-weight: bold;
-              margin-bottom: 6px;
-              font-size: 0.85rem;
-            "
-            >パス上限回数</label
-          >
-          <div
-            style="
-              display: flex;
-              justify-content: center;
-              align-items: center;
-              gap: 12px;
-              background: rgba(0, 0, 0, 0.2);
-              padding: 8px;
-              border-radius: 8px;
-            "
-          >
-            <input
-              type="number"
-              id="setting-pass-limit"
-              value="5"
-              min="0"
-              max="99"
-              style="
-                width: 70px;
-                text-align: center;
-                border-radius: 6px;
-                border: none;
-                padding: 6px;
-                font-size: 1rem;
-                font-weight: bold;
-                color: #2c3e50;
-              "
-            />
-            <span style="font-size: 0.9rem">回</span>
-            <label
-              style="
-                font-size: 0.9rem;
-                cursor: pointer;
-                display: flex;
-                align-items: center;
-                gap: 4px;
-                margin-left: 10px;
-                border-left: 1px solid rgba(255, 255, 255, 0.3);
-                padding-left: 15px;
-              "
-            >
-              <input type="checkbox" id="setting-pass-infinite" /> 無制限
+        <!-- パス上限回数 -->
+        <div class="setting-group compact-row">
+          <label>パス上限回数</label>
+          <div class="pass-limit-flex">
+            <input type="number" id="setting-pass-limit" min="0" max="99" value="5">
+            <label class="panel-check-label inline-pass-chk">
+              <input type="checkbox" id="setting-pass-infinite"> 無制限
             </label>
           </div>
         </div>
+      </div>
 
-        <!-- モーダルを閉じるボタン（ID：btn-close-settings） -->
-        <button
-          id="btn-close-settings"
-          class="btn modal-btn"
-          style="
-            background-color: #3498db;
-            color: white;
-            border: none;
-            padding: 10px 0;
-            font-size: 1rem;
-            font-weight: bold;
-            border-radius: 20px;
-            cursor: pointer;
-            width: 100%;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
-          "
-        >
-          保存して閉じる
+      <!-- 【右側エリア】アクションボタンを独立配置 -->
+      <div class="settings-side-actions">
+        <button id="btn-close-settings" class="btn btn-main btn-success save-trigger-btn">
+          保存して<br>閉じる
         </button>
       </div>
+
     </div>
+  </div>
+</div>
 
     <!-- モーダル2: ルール説明モーダル -->
     <div class="modal-overlay" id="rule-modal">

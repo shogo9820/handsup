@@ -739,3 +739,185 @@ body.danger::before {
   50%  { box-shadow: inset 0 0 150px rgba(255, 0, 0, 0.85); } /* 画面の左右から中央近くまで真っ赤に染める */
   100% { box-shadow: inset 0 0 30px rgba(255, 23, 68, 0.2); }
 }
+
+/* ==================================================
+   📱 スマホ横持ち（ランドスケープ）専用 環境設定レイアウト
+   ================================================== */
+
+/* 環境設定モーダルのみ、横長に最適化した最大幅へ拡張 */
+.settings-landscape-content {
+  width: 95% !important;
+  max-width: 640px !important;
+  max-height: 92dvh !important; /* 画面にピタッと収まる高さ */
+  padding: 12px 16px !important;
+  overflow: hidden !important; /* スクロールを完全に禁止 */
+}
+
+.settings-landscape-content .modal-title {
+  font-size: 1.1rem;
+  margin-bottom: 8px;
+}
+
+/* 💡 左右レイアウトに分割するFlexBox */
+.settings-layout-wrapper {
+  display: flex;
+  flex-direction: row;
+  gap: 16px;
+  align-items: stretch;
+  justify-content: space-between;
+  width: 100%;
+}
+
+/* 【左側】設定項目エリア：2カラムのグリッドにして高さを限界まで縮小 */
+.settings-main-fields {
+  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px 12px;
+}
+
+/* 各設定行の余白を極小化 */
+.setting-group.compact-row {
+  margin-bottom: 0 !important;
+  text-align: left !important;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.setting-group.compact-row label {
+  text-align: left !important;
+  margin-bottom: 2px !important;
+  font-size: 0.75rem !important;
+  opacity: 0.9;
+}
+
+/* --- 各入力パーツの横持ち最適化スタイリング --- */
+
+/* ドラムピッカーの高さを90pxから64pxに縮小（2行分が見えるミニサイズに） */
+.settings-main-fields .picker-container {
+  height: 64px !important;
+  width: 100%;
+}
+.settings-main-fields .picker-highlight {
+  top: 16px !important;
+  height: 32px !important;
+}
+.settings-main-fields .picker-column {
+  height: 64px !important;
+}
+.settings-main-fields .picker-wheel {
+  padding: 16px 0 !important; /* 上下の余白を削って位置ズレ防止 */
+}
+
+/* 難易度チェックボックスのタイル化 */
+.difficulty-checkbox-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 4px;
+}
+
+/* 汎用的な押しやすいパネル型ラベル */
+.panel-check-label {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 6px;
+  padding: 6px 0;
+  font-size: 0.85rem !important;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  cursor: pointer;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+.panel-check-label input {
+  margin: 0;
+  transform: scale(1.05);
+}
+
+/* ラジオボタンをアプリのUIに馴染む「セグメントスイッチ」に変更 */
+.segmented-control {
+  display: flex;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 6px;
+  padding: 2px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+.segment-item {
+  flex: 1;
+  text-align: center;
+  cursor: pointer;
+  margin: 0 !important;
+}
+.segment-item input {
+  display: none; /* ラジオボタンのポチを消す */
+}
+.segment-item span {
+  display: block;
+  padding: 5px 0;
+  font-size: 0.8rem;
+  font-weight: bold;
+  border-radius: 4px;
+  color: #bdc3c7;
+  transition: all 0.15s ease;
+}
+/* ラジオボタンがチェックされている方の見た目をハイライト */
+.segment-item input:checked + span {
+  background: #3498db;
+  color: #fff;
+}
+
+/* パス回数設定の横並び化 */
+.pass-limit-flex {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  height: 32px;
+}
+#setting-pass-limit {
+  width: 50px;
+  height: 100%;
+  border-radius: 6px;
+  border: none;
+  background: #fff;
+  color: #2c3e50;
+  font-size: 0.95rem;
+  font-weight: bold;
+  text-align: center;
+}
+#setting-pass-limit:disabled {
+  background: #7f8c8d;
+  color: #bdc3c7;
+  opacity: 0.5;
+}
+.inline-pass-chk {
+  flex: 1;
+  height: 100%;
+  padding: 0 !important;
+}
+
+/* 【右側】保存ボタン専用エリア：高さを目一杯使って特大のボタンを配置 */
+.settings-side-actions {
+  width: 110px;
+  display: flex;
+  align-items: stretch; /* 縦いっぱいに広げる */
+}
+
+.save-trigger-btn {
+  width: 100% !important;
+  max-width: none !important;
+  height: auto !important;
+  margin: 0 !important;
+  border-radius: 12px !important;
+  font-size: 1.05rem !important;
+  line-height: 1.4 !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(46, 204, 113, 0.4) !important;
+  background-color: var(--bg-correct) !important;
+}
+.save-trigger-btn:active {
+  transform: scale(0.96) !important;
+}
