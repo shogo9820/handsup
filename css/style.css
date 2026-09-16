@@ -741,183 +741,165 @@ body.danger::before {
 }
 
 /* ==================================================
-   📱 スマホ横持ち（ランドスケープ）専用 環境設定レイアウト
+   📱 既存機能を一切損なわない 横持ちフラット最適化
    ================================================== */
 
-/* 環境設定モーダルのみ、横長に最適化した最大幅へ拡張 */
-.settings-landscape-content {
-  width: 95% !important;
-  max-width: 640px !important;
-  max-height: 92dvh !important; /* 画面にピタッと収まる高さ */
-  padding: 12px 16px !important;
-  overflow: hidden !important; /* スクロールを完全に禁止 */
-}
-
-.settings-landscape-content .modal-title {
-  font-size: 1.1rem;
-  margin-bottom: 8px;
-}
-
-/* 💡 左右レイアウトに分割するFlexBox */
-.settings-layout-wrapper {
-  display: flex;
-  flex-direction: row;
-  gap: 16px;
-  align-items: stretch;
-  justify-content: space-between;
-  width: 100%;
-}
-
-/* 【左側】設定項目エリア：2カラムのグリッドにして高さを限界まで縮小 */
-.settings-main-fields {
-  flex: 1;
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 8px 12px;
-}
-
-/* 各設定行の余白を極小化 */
-.setting-group.compact-row {
-  margin-bottom: 0 !important;
-  text-align: left !important;
+/* モーダル自体の幅を横長画面に合わせて広げ、縦をスタイリッシュに圧縮 */
+.settings-landscape-clean {
+  width: 85% !important;
+  max-width: 500px !important;
+  max-height: 94dvh !important; /* 画面にピタッと収まる高さ */
+  padding: 10px 20px 14px 20px !important;
+  overflow: hidden !important; /* スクロールバー自体を完全に不要化 */
   display: flex;
   flex-direction: column;
-  justify-content: center;
 }
 
-.setting-group.compact-row label {
-  text-align: left !important;
-  margin-bottom: 2px !important;
-  font-size: 0.75rem !important;
-  opacity: 0.9;
+.settings-landscape-clean .modal-title {
+  font-size: 1.1rem;
+  margin-bottom: 8px;
+  font-weight: bold;
 }
 
-/* --- 各入力パーツの横持ち最適化スタイリング --- */
-
-/* ドラムピッカーの高さを90pxから64pxに縮小（2行分が見えるミニサイズに） */
-.settings-main-fields .picker-container {
-  height: 64px !important;
+/* 各設定項目を包むコンテナ */
+.settings-list-container {
+  display: flex;
+  flex-direction: column;
+  gap: 4px; /* 必要最小限の隙間で余白を詰める */
   width: 100%;
 }
-.settings-main-fields .picker-highlight {
-  top: 16px !important;
-  height: 32px !important;
-}
-.settings-main-fields .picker-column {
-  height: 64px !important;
-}
-.settings-main-fields .picker-wheel {
-  padding: 16px 0 !important; /* 上下の余白を削って位置ズレ防止 */
+
+/* 💡 1項目＝1行のすっきりした横長バー形式に統一（左右の視覚バランスを最適化） */
+.setting-group.landscape-row {
+  margin-bottom: 0 !important;
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  background: rgba(0, 0, 0, 0.15); /* ほんのり背景を敷いて見やすく */
+  padding: 4px 12px;
+  border-radius: 8px;
+  min-height: 40px;
 }
 
-/* 難易度チェックボックスのタイル化 */
-.difficulty-checkbox-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 4px;
-}
-
-/* 汎用的な押しやすいパネル型ラベル */
-.panel-check-label {
-  background: rgba(0, 0, 0, 0.2);
-  border-radius: 6px;
-  padding: 6px 0;
-  font-size: 0.85rem !important;
-  font-weight: bold;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 4px;
-  cursor: pointer;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-}
-.panel-check-label input {
-  margin: 0;
-  transform: scale(1.05);
-}
-
-/* ラジオボタンをアプリのUIに馴染む「セグメントスイッチ」に変更 */
-.segmented-control {
-  display: flex;
-  background: rgba(0, 0, 0, 0.2);
-  border-radius: 6px;
-  padding: 2px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-}
-.segment-item {
-  flex: 1;
-  text-align: center;
-  cursor: pointer;
-  margin: 0 !important;
-}
-.segment-item input {
-  display: none; /* ラジオボタンのポチを消す */
-}
-.segment-item span {
+/* 左側のラベル：ノイズにならないようすっきり小さめに */
+.setting-group.landscape-row label {
   display: block;
-  padding: 5px 0;
-  font-size: 0.8rem;
   font-weight: bold;
-  border-radius: 4px;
-  color: #bdc3c7;
-  transition: all 0.15s ease;
-}
-/* ラジオボタンがチェックされている方の見た目をハイライト */
-.segment-item input:checked + span {
-  background: #3498db;
-  color: #fff;
+  margin-bottom: 0 !important;
+  font-size: 0.8rem !important;
+  text-align: left !important;
+  color: #ecf0f1;
 }
 
-/* パス回数設定の横並び化 */
-.pass-limit-flex {
+/* 右側の操作フィールドエリア */
+.landscape-value-field {
   display: flex;
-  gap: 6px;
   align-items: center;
-  height: 32px;
+  justify-content: flex-end;
+  gap: 12px;
 }
-#setting-pass-limit {
-  width: 50px;
-  height: 100%;
-  border-radius: 6px;
+
+/* --- 既存のパーツを機能を壊さずに縮小・リファイン --- */
+
+/* 1. ドラムピッカー：高さを90pxから54pxに低くし、この行の中に綺麗に埋め込む */
+.container-landscape-fix {
+  height: 54px !important;
+  background: rgba(0, 0, 0, 0.2) !important;
+  margin: 0 !important;
+  width: 140px !important;
+}
+.container-landscape-fix .picker-column {
+  height: 54px !important;
+  width: 40px !important;
+}
+.container-landscape-fix .picker-wheel {
+  padding: 11px 0 !important; /* 54pxの高さで中央に1行が綺麗に止まるようにパディングを修正 */
+}
+.container-landscape-fix .picker-item {
+  height: 32px !important;
+  line-height: 32px !important;
+  font-size: 0.95rem !important;
+}
+.container-landscape-fix .picker-highlight {
+  top: 11px !important; /* 中央1行をジャストで捉える位置 */
+  height: 32px !important;
+  left: 4px !important;
+  right: 4px !important;
+}
+.container-landscape-fix::before,
+.container-landscape-fix::after {
+  height: 11px !important; /* 上下のボカシグラデーションの幅も高さに合わせて縮小 */
+}
+
+/* 2. 難易度 & 3. 振って操作（標準のチェック・ラジオの見た目を邪魔せず横並び化） */
+.check-group-fix, .radio-group-fix {
+  display: flex !important;
+  gap: 10px !important;
+}
+.native-check-label, .native-radio-label {
+  font-size: 0.85rem !important;
+  font-weight: bold !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 4px !important;
+  cursor: pointer;
+}
+.native-check-label input, .native-radio-label input {
+  margin: 0 !important;
+  accent-color: #3498db; /* チェック時の色をアプリカラーに統一 */
+}
+
+/* 4. パス上限回数 */
+.pass-group-fix {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.native-num-input {
+  width: 44px;
+  height: 26px;
+  border-radius: 4px;
   border: none;
   background: #fff;
   color: #2c3e50;
-  font-size: 0.95rem;
+  font-size: 0.9rem;
   font-weight: bold;
   text-align: center;
 }
-#setting-pass-limit:disabled {
+.native-num-input:disabled {
   background: #7f8c8d;
   color: #bdc3c7;
-  opacity: 0.5;
+  opacity: 0.6;
 }
-.inline-pass-chk {
-  flex: 1;
-  height: 100%;
-  padding: 0 !important;
+.unit-text {
+  font-size: 0.8rem;
+  font-weight: bold;
+  color: #bdc3c7;
 }
-
-/* 【右側】保存ボタン専用エリア：高さを目一杯使って特大のボタンを配置 */
-.settings-side-actions {
-  width: 110px;
-  display: flex;
-  align-items: stretch; /* 縦いっぱいに広げる */
+.native-check-label-infinite {
+  font-size: 0.8rem !important;
+  font-weight: bold !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 3px !important;
+  margin-left: 6px;
+  cursor: pointer;
 }
-
-.save-trigger-btn {
-  width: 100% !important;
-  max-width: none !important;
-  height: auto !important;
+.native-check-label-infinite input {
   margin: 0 !important;
-  border-radius: 12px !important;
-  font-size: 1.05rem !important;
-  line-height: 1.4 !important;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 4px 12px rgba(46, 204, 113, 0.4) !important;
-  background-color: var(--bg-correct) !important;
+  accent-color: #3498db;
 }
-.save-trigger-btn:active {
-  transform: scale(0.96) !important;
+
+/* 5. 保存して閉じるボタン：下部に程よいサイズで配置 */
+.landscape-save-btn {
+  display: block !important;
+  width: 100% !important;
+  max-width: 220px !important;
+  margin: 10px auto 0 auto !important;
+  padding: 8px 16px !important;
+  font-size: 0.9rem !important;
+  background-color: var(--bg-correct) !important;
+  border-radius: 20px !important;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.2) !important;
 }

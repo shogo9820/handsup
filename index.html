@@ -224,19 +224,16 @@
 
     <!-- ⚙ 環境設定モーダル（完全版：そのまま置き換え） -->
 <div id="settings-modal" class="modal-overlay">
-  <div class="modal-content settings-landscape-content">
+  <div class="modal-content settings-landscape-clean">
     <h3 class="modal-title">⚙ 環境設定</h3>
     
-    <!-- 💡 左右を分割するためのラッパーを新設 -->
-    <div class="settings-layout-wrapper">
+    <div class="settings-list-container">
       
-      <!-- 【左側エリア】設定項目をコンパクトに凝縮 -->
-      <div class="settings-main-fields">
-        <!-- 制限時間 -->
-        <div class="setting-group compact-row">
-          <label>制限時間</label>
-          <!-- ピッカーコンテナ（既存の構造を維持） -->
-          <div class="picker-container">
+      <!-- 1. 制限時間（ドラムピッカーの構造・IDは完全維持） -->
+      <div class="setting-group landscape-row">
+        <label>制限時間</label>
+        <div class="landscape-value-field">
+          <div class="picker-container container-landscape-fix">
             <div class="picker-highlight"></div>
             <div id="picker-min" class="picker-column"><div id="wheel-min" class="picker-wheel"></div></div>
             <span class="picker-unit">分</span>
@@ -244,49 +241,47 @@
             <span class="picker-unit">秒</span>
           </div>
         </div>
+      </div>
 
-        <!-- 難易度 -->
-        <div class="setting-group compact-row">
-          <label>難易度</label>
-          <div class="difficulty-checkbox-grid">
-            <label class="panel-check-label"><input type="checkbox" name="difficulty-chk" value="1"> 1</label>
-            <label class="panel-check-label"><input type="checkbox" name="difficulty-chk" value="2"> 2</label>
-            <label class="panel-check-label"><input type="checkbox" name="difficulty-chk" value="3"> 3</label>
-            <label class="panel-check-label"><input type="checkbox" name="difficulty-chk" value="4"> 4</label>
-          </div>
-        </div>
-
-        <!-- 操作方法（デバイスを振る） -->
-        <div class="setting-group compact-row">
-          <label>デバイスを振って操作</label>
-          <div class="segmented-control">
-            <label class="segment-item"><input type="radio" name="shake-gyro" value="true"><span>有効</span></label>
-            <label class="segment-item"><input type="radio" name="shake-gyro" value="false"><span>無効</span></label>
-          </div>
-        </div>
-
-        <!-- パス上限回数 -->
-        <div class="setting-group compact-row">
-          <label>パス上限回数</label>
-          <div class="pass-limit-flex">
-            <input type="number" id="setting-pass-limit" min="0" max="99" value="5">
-            <label class="panel-check-label inline-pass-chk">
-              <input type="checkbox" id="setting-pass-infinite"> 無制限
-            </label>
-          </div>
+      <!-- 2. 難易度（複数選択チェックボックスの仕様・ID・Nameは完全維持） -->
+      <div class="setting-group landscape-row">
+        <label>難易度（複数選択可）</label>
+        <div class="landscape-value-field check-group-fix">
+          <label class="native-check-label"><input type="checkbox" name="difficulty-chk" value="1"> 1</label>
+          <label class="native-check-label"><input type="checkbox" name="difficulty-chk" value="2"> 2</label>
+          <label class="native-check-label"><input type="checkbox" name="difficulty-chk" value="3"> 3</label>
+          <label class="native-check-label"><input type="checkbox" name="difficulty-chk" value="4"> 4</label>
         </div>
       </div>
 
-      <!-- 【右側エリア】アクションボタンを独立配置 -->
-      <div class="settings-side-actions">
-        <button id="btn-close-settings" class="btn btn-main btn-success save-trigger-btn">
-          保存して<br>閉じる
-        </button>
+      <!-- 3. デバイスを振って操作（ラジオボタンの仕様・ID・Nameは完全維持） -->
+      <div class="setting-group landscape-row">
+        <label>デバイスを振って操作</label>
+        <div class="landscape-value-field radio-group-fix">
+          <label class="native-radio-label"><input type="radio" name="shake-gyro" value="true"> 有効</label>
+          <label class="native-radio-label"><input type="radio" name="shake-gyro" value="false"> 無効</label>
+        </div>
+      </div>
+
+      <!-- 4. パス上限回数（数値入力・無制限チェックボックスの仕様・IDは完全維持） -->
+      <div class="setting-group landscape-row">
+        <label>パス上限回数</label>
+        <div class="landscape-value-field pass-group-fix">
+          <input type="number" id="setting-pass-limit" min="0" max="99" value="5" class="native-num-input">
+          <span class="unit-text">回</span>
+          <label class="native-check-label-infinite">
+            <input type="checkbox" id="setting-pass-infinite"> 無制限
+          </label>
+        </div>
       </div>
 
     </div>
+
+    <!-- 5. 保存して閉じるボタン（元のIDを完全維持） -->
+    <button id="btn-close-settings" class="btn modal-btn landscape-save-btn">保存して閉じる</button>
   </div>
 </div>
+
 
     <!-- モーダル2: ルール説明モーダル -->
     <div class="modal-overlay" id="rule-modal">
