@@ -56,6 +56,8 @@ const masterWords = [
   { text: "小瓶", category1: "salmons", category2: "null", category3: null, difficulty: 5, katakana_flg: 0 },
   { text: "テキーラ", category1: "salmons", category2: "null", category3: null, difficulty: 5, katakana_flg: 0 },
   { text: "寝げろ", category1: "salmons", category2: "null", category3: null, difficulty: 5, katakana_flg: 0 },
+  { text: "もらいげろ", category1: "salmons", category2: "null", category3: null, difficulty: 5, katakana_flg: 0 },
+  { text: "場げろ", category1: "salmons", category2: "null", category3: null, difficulty: 5, katakana_flg: 0 },
   { text: "げろ箱", category1: "salmons", category2: "null", category3: null, difficulty: 5, katakana_flg: 0 },
   { text: "いヴぁらき", category1: "salmons", category2: "null", category3: null, difficulty: 5, katakana_flg: 0 },
   { text: "ふうっ", category1: "salmons", category2: "null", category3: null, difficulty: 5, katakana_flg: 0 },
@@ -73,6 +75,7 @@ const masterWords = [
   { text: "三条大橋", category1: "salmons", category2: "null", category3: null, difficulty: 5, katakana_flg: 0 },
   { text: "＃はぴかわ", category1: "salmons", category2: "null", category3: null, difficulty: 5, katakana_flg: 0 },
   { text: "ﾀｯﾀ", category1: "salmons", category2: "null", category3: null, difficulty: 5, katakana_flg: 0 },
+  { text: "罰ゲーム旅", category1: "salmons", category2: "null", category3: null, difficulty: 5, katakana_flg: 0 },
 
   // ===================================================
   // どうぶつ (animals)
