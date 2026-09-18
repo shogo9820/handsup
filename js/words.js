@@ -72,6 +72,7 @@ const masterWords = [
   { text: "4位", category1: "salmons", category2: "null", category3: null, difficulty: 5, katakana_flg: 0 },
   { text: "三条大橋", category1: "salmons", category2: "null", category3: null, difficulty: 5, katakana_flg: 0 },
   { text: "＃はぴかわ", category1: "salmons", category2: "null", category3: null, difficulty: 5, katakana_flg: 0 },
+  { text: "ﾀｯﾀ", category1: "salmons", category2: "null", category3: null, difficulty: 5, katakana_flg: 0 },
 
   // ===================================================
   // どうぶつ (animals)
