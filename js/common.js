@@ -211,11 +211,51 @@ function stopCommonGame() {
 // ===================================================
 let isMotionCoolTime = false;
 
+// モーション判定用ステート管理（戻し動作での誤反応を防止するニュートラル復帰方式）
+const motionState = {
+  phase: 'WAIT_NEUTRAL', // 'WAIT_NEUTRAL': ニュートラル復帰待ち / 'NEUTRAL': 入力受付可能
+  initialized: false,
+  smoothGx: 0,
+  smoothGy: 0,
+  smoothGz: 0,
+  baselineAngle: 15,     // ユーザーの基準保持角度（おでこ=0°付近、手持ち=20〜40°付近）
+  prevTiltAngle: 0,
+  prevTimestamp: 0,
+  angularVel: 0,         // 傾き角速度 (deg/s)
+  neutralStableSince: 0, // ニュートラル圏内で静止し始めた時刻
+  cooldownUntil: 0,      // アクション後の最低待機完了時刻
+  lastDownMotionTime: 0, // 下方向への動き/傾きを検知した最終時刻（戻し動作の逆反応防止用）
+  lastUpMotionTime: 0,   // 上方向への動き/傾きを検知した最終時刻（戻し動作の逆反応防止用）
+  lastCallback: null
+};
+
+function resetMotionState(initialDelayMs = 500) {
+  const now = performance.now();
+  motionState.phase = 'WAIT_NEUTRAL';
+  motionState.initialized = false;
+  motionState.angularVel = 0;
+  motionState.neutralStableSince = 0;
+  motionState.cooldownUntil = now + initialDelayMs;
+  motionState.lastDownMotionTime = 0;
+  motionState.lastUpMotionTime = 0;
+}
+
+function isIOSDevice() {
+  return /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+    (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1) ||
+    (typeof DeviceMotionEvent !== 'undefined' && typeof DeviceMotionEvent.requestPermission === 'function');
+}
+
 async function startGyroGame(onAction) {
+  if (typeof onAction === 'function') {
+    motionState.lastCallback = onAction;
+  }
   stopGyroGame();
 
   // 2. 設定で「振る制御」がOFFならセンサーイベントを登録しない
   if (!appState.settings.isShakeEnabled) return false;
+
+  resetMotionState(500);
 
   if (typeof DeviceMotionEvent !== 'undefined' &&
       typeof DeviceMotionEvent.requestPermission === 'function') {
@@ -242,35 +282,178 @@ function stopGyroGame() {
     window._currentMotionHandler = null;
   }
   isMotionCoolTime = false;
+  resetMotionState(0);
 }
 
 function handleCommonMotion(event, onAction) {
-  if (isMotionCoolTime || appState.isPaused || appState.timeLeftSec <= 0) return;
-
-  const accel = event.acceleration;
-  if (!accel || accel.x === null || accel.y === null || accel.z === null) return;
-
-  let zAcceleration = accel.z;
-  const xAcceleration = accel.x;
-  const yAcceleration = accel.y;
-
-  const maxHorizontalTolerance = 5; 
-  if (Math.abs(xAcceleration) > maxHorizontalTolerance || Math.abs(yAcceleration) > maxHorizontalTolerance) {
-    return; 
+  if (appState.isPaused || appState.timeLeftSec <= 0) {
+    // 一時停止中はニュートラル待ち状態へ戻し、再開直後の誤反応を防ぐ
+    motionState.phase = 'WAIT_NEUTRAL';
+    motionState.neutralStableSince = 0;
+    return;
   }
 
-  const thresholdCorrect = 6; 
-  const thresholdPass = 6;    
+  const now = performance.now();
+  const sign = isIOSDevice() ? -1 : 1; // iOSとAndroidのZ軸等の符号差を正規化（画面上向き＝＋、下向き＝－）
 
-  if (zAcceleration < -thresholdCorrect) {
-    triggerMotionAction('correct', onAction);
-  } else if (zAcceleration > thresholdPass) {
-    triggerMotionAction('pass', onAction);
+  const ag = event.accelerationIncludingGravity;
+  const accel = event.acceleration;
+  const linZ = (accel && accel.z !== null && accel.z !== undefined) ? accel.z * sign : 0;
+
+  // 重力加速度センサーが利用可能な場合（実機スマホ・標準環境）
+  if (ag && ag.z !== null && ag.z !== undefined) {
+    const gx = (ag.x || 0) * sign;
+    const gy = (ag.y || 0) * sign;
+    const gz = (ag.z || 0) * sign;
+
+    if (!motionState.initialized) {
+      motionState.smoothGx = gx;
+      motionState.smoothGy = gy;
+      motionState.smoothGz = gz;
+      const initHoriz = Math.sqrt(gx * gx + gy * gy);
+      const initAngle = Math.atan2(gz, Math.max(0.1, initHoriz)) * (180 / Math.PI);
+      motionState.prevTiltAngle = initAngle;
+      motionState.baselineAngle = Math.max(-10, Math.min(45, initAngle));
+      motionState.prevTimestamp = now;
+      motionState.initialized = true;
+      return;
+    }
+
+    const dt = Math.min(0.1, Math.max(0.005, (now - motionState.prevTimestamp) / 1000));
+    motionState.prevTimestamp = now;
+
+    // ローパスフィルタで振る際の停止衝撃や手ブレを平滑化
+    const filterAlpha = 0.35;
+    motionState.smoothGx += filterAlpha * (gx - motionState.smoothGx);
+    motionState.smoothGy += filterAlpha * (gy - motionState.smoothGy);
+    motionState.smoothGz += filterAlpha * (gz - motionState.smoothGz);
+
+    const horizG = Math.sqrt(
+      motionState.smoothGx * motionState.smoothGx +
+      motionState.smoothGy * motionState.smoothGy
+    );
+    // 画面の傾き角度 (-90°: 床向き/おじぎ, 0°: 垂直/おでこ, +90°: 天井向き)
+    const tiltAngle = Math.atan2(motionState.smoothGz, Math.max(0.1, horizG)) * (180 / Math.PI);
+
+    // 傾きの変化速度 (deg/s)
+    const rawVel = (tiltAngle - motionState.prevTiltAngle) / dt;
+    motionState.angularVel = motionState.angularVel * 0.6 + rawVel * 0.4;
+    motionState.prevTiltAngle = tiltAngle;
+
+    const deltaAngle = tiltAngle - motionState.baselineAngle;
+
+    // 下方向へある程度傾いたことを記録（直後の「上に戻す動作」でパスが誤発火するのを防ぐ）
+    if (deltaAngle <= -12) {
+      motionState.lastDownMotionTime = now;
+    }
+    // 上方向へある程度傾いたことを記録（直後の「下に戻す動作」で正解が誤発火するのを防ぐ）
+    if (deltaAngle >= 12) {
+      motionState.lastUpMotionTime = now;
+    }
+
+    const isNearNeutralAngle = (tiltAngle >= -15 && tiltAngle <= 50) && Math.abs(deltaAngle) <= 18;
+    const isCalm = Math.abs(motionState.angularVel) < 45 && Math.abs(linZ) < 3.5;
+
+    // 1. ニュートラル復帰待ちフェーズ（一度振った後、元の角度に戻って静止するまで次の判定を行わない）
+    if (motionState.phase === 'WAIT_NEUTRAL' || isMotionCoolTime) {
+      if (now < motionState.cooldownUntil || isMotionCoolTime) {
+        motionState.neutralStableSince = 0;
+        return;
+      }
+
+      if (isNearNeutralAngle && isCalm) {
+        if (motionState.neutralStableSince === 0) {
+          motionState.neutralStableSince = now;
+        } else if (now - motionState.neutralStableSince >= 180) {
+          // 元の体勢に戻って180ms以上安定したら、次のお題への操作受付を解禁
+          motionState.phase = 'NEUTRAL';
+          motionState.lastDownMotionTime = 0;
+          motionState.lastUpMotionTime = 0;
+          motionState.baselineAngle = Math.max(-10, Math.min(45,
+            motionState.baselineAngle * 0.5 + tiltAngle * 0.5
+          ));
+        }
+      } else {
+        motionState.neutralStableSince = 0;
+        // 持ち方の角度が変わった場合でも自然な範囲で静止していれば基準角度を追従させる
+        if (tiltAngle >= -12 && tiltAngle <= 48 && isCalm) {
+          motionState.baselineAngle += 0.06 * (tiltAngle - motionState.baselineAngle);
+          motionState.baselineAngle = Math.max(-10, Math.min(45, motionState.baselineAngle));
+        }
+      }
+      return;
+    }
+
+    // 2. ニュートラル待機中：静止時は基準角度を緩やかに追従
+    if (Math.abs(deltaAngle) < 10 && isCalm) {
+      motionState.baselineAngle += 0.03 * (tiltAngle - motionState.baselineAngle);
+      motionState.baselineAngle = Math.max(-10, Math.min(45, motionState.baselineAngle));
+    }
+
+    const REBOUND_GUARD_MS = 650;
+
+    // 下に振る / おじぎ（正解）の判定
+    // ※上方向へ振った直後の戻し動作中や、上向きに動いている最中は発火させない
+    const canTriggerCorrect =
+      (now - motionState.lastUpMotionTime >= REBOUND_GUARD_MS) &&
+      motionState.angularVel <= 20;
+    const isDownTilt = (deltaAngle <= -28 && tiltAngle <= 10);
+    const isDownSwing = (deltaAngle <= -16 && tiltAngle <= 18 && (motionState.angularVel <= -70 || linZ <= -4.0));
+
+    if (canTriggerCorrect && (isDownTilt || isDownSwing)) {
+      triggerMotionAction('correct', onAction);
+      return;
+    }
+
+    // 上に振る / 天井に向ける（パス）の判定
+    // ※下方向へ振った直後の「上に戻す動作」中や、下向きに動いている最中は発火させない
+    const canTriggerPass =
+      (now - motionState.lastDownMotionTime >= REBOUND_GUARD_MS) &&
+      motionState.angularVel >= -20;
+    const isUpTilt = (deltaAngle >= 28 && tiltAngle >= 40) || (tiltAngle >= 68 && deltaAngle >= 20);
+    const isUpSwing = (deltaAngle >= 16 && tiltAngle >= 25 && (motionState.angularVel >= 70 || linZ >= 4.0));
+
+    if (canTriggerPass && (isUpTilt || isUpSwing)) {
+      triggerMotionAction('pass', onAction);
+      return;
+    }
+    return;
+  }
+
+  // フォールバック：重力センサー値が取得できず線形加速度のみの場合
+  if (!accel || accel.z === null) return;
+  if (isMotionCoolTime || now < motionState.cooldownUntil) return;
+
+  const REBOUND_GUARD_MS = 700;
+  const threshold = 6;
+
+  if (linZ < -threshold) {
+    motionState.lastDownMotionTime = now;
+    if (now - motionState.lastUpMotionTime >= REBOUND_GUARD_MS) {
+      triggerMotionAction('correct', onAction);
+    }
+  } else if (linZ > threshold) {
+    motionState.lastUpMotionTime = now;
+    if (now - motionState.lastDownMotionTime >= REBOUND_GUARD_MS) {
+      triggerMotionAction('pass', onAction);
+    }
   }
 }
 
 function triggerMotionAction(action, onAction) {
+  const now = performance.now();
+  // アクション発生後は必ず「ニュートラル復帰待ち」へ移行し、戻す動作での誤反応を遮断
+  motionState.phase = 'WAIT_NEUTRAL';
+  motionState.neutralStableSince = 0;
+
+  // パス上限到達時はパスを実行せず、戻し動作の誤判定防止クールタイムのみ設定
+  if (action === 'pass' && appState.settings.passLimit !== "infinite" && appState.remainingPasses <= 0) {
+    motionState.cooldownUntil = now + 500;
+    return;
+  }
+
   isMotionCoolTime = true;
+  motionState.cooldownUntil = now + 950; // お題切り替え演出（800ms）が完了するまでロック
 
   if (navigator.vibrate) {
     navigator.vibrate(200); 
@@ -282,7 +465,7 @@ function triggerMotionAction(action, onAction) {
 
   setTimeout(() => {
     isMotionCoolTime = false;
-  }, 400);
+  }, 950);
 }
 // ===================================================
 // UI イベント（カテゴリカード & モーダル制御）
@@ -346,6 +529,16 @@ document.getElementById('btn-close-settings').addEventListener('click', () => {
   // 2. 振る制御の保存
   const shakeVal = document.querySelector('input[name="shake-gyro"]:checked')?.value;
   appState.settings.isShakeEnabled = (shakeVal === "true");
+
+  // プレイ画面中に設定変更された場合、即座にセンサーの有効・無効を反映
+  const isPlaying = gestureScreen.classList.contains('active') || tabooScreen.classList.contains('active');
+  if (isPlaying) {
+    if (appState.settings.isShakeEnabled && motionState.lastCallback) {
+      startGyroGame(motionState.lastCallback);
+    } else if (!appState.settings.isShakeEnabled) {
+      stopGyroGame();
+    }
+  }
 
   // 5. パス制限の保存
   const isInfinite = document.getElementById('setting-pass-infinite').checked;

@@ -2,9 +2,16 @@
 // カタカナーシ 制御
 // ===================================================
 let currentTabooWordText = '';
+let isTabooTransitioning = false;
+let tabooTransitionTimeout = null;
 
 document.getElementById('btn-taboo-start').addEventListener('click', async () => {
   initAudio(); // 💡 音声の初期化（追加）
+  isTabooTransitioning = false;
+  if (tabooTransitionTimeout) {
+    clearTimeout(tabooTransitionTimeout);
+    tabooTransitionTimeout = null;
+  }
 
   // 5. パス回数の初期設定（無限か指定回数か）
   if (appState.settings.passLimit === "infinite") {
@@ -64,8 +71,8 @@ function renderNextTabooWord() {
 function handleTabooAction(action) {
   const display = document.getElementById('taboo-word');
 
-  // 単語が表示されていない（全問終了時など）場合は記録しない
-  if (!currentTabooWordText) return;
+  // 単語が表示されていない（全問終了時など）またはお題切り替え演出中は記録しない
+  if (!currentTabooWordText || isTabooTransitioning) return;
 
   if (action === 'correct') {
     playSE('correct'); // 💡 正解音「ピコーン！」を鳴らす（追加）
@@ -103,8 +110,11 @@ function handleTabooAction(action) {
     display.textContent = "パス！";
   }
 
-  setTimeout(() => {
+  isTabooTransitioning = true;
+  tabooTransitionTimeout = setTimeout(() => {
     document.body.classList.remove('correct', 'pass');
+    isTabooTransitioning = false;
+    tabooTransitionTimeout = null;
     renderNextTabooWord();
   }, 800);
 }

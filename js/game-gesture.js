@@ -2,9 +2,16 @@
 // ジェスチャーゲーム（Heads Up!）制御
 // ===================================================
 let currentGestureWordText = '';
+let isGestureTransitioning = false;
+let gestureTransitionTimeout = null;
 
 document.getElementById('btn-gesture-start').addEventListener('click', async () => {
   initAudio(); // 💡 音声の初期化（追加）
+  isGestureTransitioning = false;
+  if (gestureTransitionTimeout) {
+    clearTimeout(gestureTransitionTimeout);
+    gestureTransitionTimeout = null;
+  }
 
   // 5. パス回数の初期設定（無限か指定回数か）
   if (appState.settings.passLimit === "infinite") {
@@ -64,8 +71,8 @@ function renderNextGestureWord() {
 function handleGestureAction(action) {
   const display = document.getElementById('gesture-word');
 
-  // 単語が表示されていない（全問終了時など）場合は記録しない
-  if (!currentGestureWordText) return;
+  // 単語が表示されていない（全問終了時など）またはお題切り替え演出中は記録しない
+  if (!currentGestureWordText || isGestureTransitioning) return;
 
   if (action === 'correct') {
     playSE('correct'); // 💡 正解音「ピコーン！」を鳴らす（追加）
@@ -103,8 +110,11 @@ function handleGestureAction(action) {
     display.textContent = "パス！";
   }
 
-  setTimeout(() => {
+  isGestureTransitioning = true;
+  gestureTransitionTimeout = setTimeout(() => {
     document.body.classList.remove('correct', 'pass');
+    isGestureTransitioning = false;
+    gestureTransitionTimeout = null;
     renderNextGestureWord();
   }, 800);
 }
