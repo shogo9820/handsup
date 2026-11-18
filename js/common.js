@@ -15,6 +15,15 @@ window.addEventListener('focus', lockLandscape);
 // 画面のどこかを初めてタップした瞬間に、確実に横にロックさせる（ブラウザ制限の突破用）
 window.addEventListener('click', lockLandscape, { once: true });
 
+// Service Worker 登録（PWA対応）
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js').catch((err) => {
+      console.log('Service Worker 登録スキップ:', err);
+    });
+  });
+}
+
 // ===================================================
 // グローバルアプリ状態（機能拡張）
 // ===================================================
