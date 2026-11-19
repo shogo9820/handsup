@@ -1,4 +1,4 @@
-const CACHE_NAME = 'party-game-v2';
+const CACHE_NAME = 'party-game-v3';
 const ASSETS_TO_CACHE = [
   'index.html',
   'css/style.css',
